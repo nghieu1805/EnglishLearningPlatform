@@ -1,0 +1,9 @@
+@model DashboardPage
+@{ViewData["Title"]="Tiến độ học tập";var learned=Model.Progress.Count(p=>p.Status==LearningStatus.Learned);var questions=Model.Attempts.Sum(a=>a.Total);}
+<p class="eyebrow">YOUR LEARNING SPACE</p><h1>Tiến bộ từng ngày</h1>
+<div class="stats"><article><strong>@learned</strong><span>Từ đã thuộc</span></article><article><strong>@Model.Progress.Count(p=>p.Status==LearningStatus.NeedsReview)</strong><span>Từ cần ôn</span></article><article><strong>@Model.Topics.Count(t=>t.Total>0&&t.Learned==t.Total)</strong><span>Chủ đề hoàn thành</span></article><article><strong>@(questions==0?0:Math.Round(100.0*Model.Attempts.Sum(a=>a.Correct)/questions))%</strong><span>Độ chính xác (100 bài gần nhất)</span></article></div>
+<h2>Tiến độ theo chủ đề</h2>@foreach(var t in Model.Topics){<div class="word-card"><strong>@t.Name</strong><p>@t.Learned / @t.Total từ đã thuộc</p><progress max="@(Math.Max(1,t.Total))" value="@t.Learned">@t.Learned</progress></div>}
+<h2>Từ vựng của bạn</h2>@if(Model.Progress.Count==0){<p>Hãy học một chủ đề và lưu trạng thái từ đầu tiên.</p>}
+@foreach(var p in Model.Progress){<div class="word-card"><p class="tag">@p.Status</p>@if(p.Vocabulary is not null){<partial name="_Word" model="p.Vocabulary"/>}</div>}
+<h2>Lịch sử quiz</h2>@if(Model.Attempts.Count==0){<p>Chưa có bài quiz nào.</p>}
+@foreach(var a in Model.Attempts){<p><a asp-controller="Quiz" asp-action="Result" asp-route-id="@a.Id">@a.Exercise?.Title · @a.Correct/@a.Total · @a.SubmittedAtUtc.ToString("dd/MM/yyyy HH:mm") UTC</a></p>}

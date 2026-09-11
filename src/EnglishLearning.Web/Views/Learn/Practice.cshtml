@@ -1,0 +1,5 @@
+@model Topic
+@{ViewData["Title"]="Luyện flashcard";}
+<a asp-action="Topic" asp-route-id="@Model.Id">← @Model.Name</a><h1>Luyện flashcard</h1><p>Đọc từ, tự nhớ nghĩa, rồi mở đáp án để kiểm tra.</p>
+<div class="cards">@foreach(var v in Model.Vocabulary){<article class="word-card"><p class="eyebrow">FLASHCARD</p><h2>@v.Word</h2><details><summary>Hiện nghĩa</summary><p class="meaning">@v.MeaningVi</p></details></article>}</div>
+@if(Model.Vocabulary.Count==0){<p>Chưa có từ vựng để luyện.</p>}

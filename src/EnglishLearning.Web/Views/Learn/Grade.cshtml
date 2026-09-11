@@ -1,0 +1,5 @@
+@model List<Topic>
+@{ViewData["Title"]=ViewBag.Grade;}
+<a asp-controller="Home" asp-action="Index">← Tất cả lớp</a><p class="eyebrow">LEARNING TOPICS</p><h1>@ViewBag.Grade</h1>
+@if(Model.Count==0){<div class="empty"><h2>Nội dung đang được chuẩn bị</h2><p>Chưa có chủ đề được xuất bản cho lớp này.</p></div>}
+<div class="cards">@foreach(var t in Model){<a class="card" asp-action="Topic" asp-route-id="@t.Id"><span class="tag">@(t.IsDemo?"DEMO":"CHỦ ĐỀ")</span><h2>@t.Name</h2><p>@t.Description</p><small>@string.Join(" · ",t.Sources.Select(s=>$"{s.Textbook} / {s.Unit}"))</small><span>Học ngay →</span></a>}</div>

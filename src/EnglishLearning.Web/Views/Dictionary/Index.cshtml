@@ -1,0 +1,7 @@
+@model List<Vocabulary>
+@{ViewData["Title"]="Từ điển";}
+<p class="eyebrow">WORD EXPLORER</p><h1>Tìm một từ mới</h1><p>Tra trong kho từ điển nội bộ, bao gồm từ độc lập ngoài bài học.</p>
+<form method="get" class="search"><label class="visually-hidden" for="q">Từ tiếng Anh</label><input id="q" name="q" maxlength="100" value="@ViewBag.Query" placeholder="Ví dụ: student, sustainability" required/><button class="btn">Tra từ</button></form>
+<p class="muted">Chưa kết nối API bên ngoài. Kết quả phụ thuộc nội dung quản trị viên đã nhập; tối đa 50 từ mỗi lần tìm.</p>
+@if(!string.IsNullOrWhiteSpace((string?)ViewBag.Query)&&Model.Count==0){<p class="empty">Chưa có từ này trong kho dữ liệu.</p>}
+<div class="cards">@foreach(var v in Model){<partial name="_Word" model="v"/>}</div>

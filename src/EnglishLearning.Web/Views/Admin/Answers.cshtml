@@ -1,0 +1,5 @@
+@model List<Answer>
+@{ViewData["Title"]="Đáp án";}
+<partial name="_AdminNav"/><h1>Đáp án</h1><p><a class="btn" asp-action="EditAnswer">Thêm mới</a></p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Câu hỏi</th><th>Nội dung đáp án</th><th>Đáp án đúng (mỗi câu đúng 1 đáp án)</th><th>Thao tác</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Id</td><td>@item.QuestionId</td><td>@item.Text</td><td>@item.IsCorrect</td><td><a asp-action="EditAnswer" asp-route-id="@item.Id">Sửa</a> <form method="post" asp-action="DeleteAnswer" data-confirm="Xoá bản ghi này và dữ liệu phụ thuộc (nếu có)?"><input type="hidden" name="id" value="@item.Id"/><button class="btn secondary">Xoá</button></form></td></tr>}</tbody></table></div>
+@if(Model.Count==0){<p>Chưa có dữ liệu.</p>}

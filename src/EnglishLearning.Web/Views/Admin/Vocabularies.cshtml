@@ -1,0 +1,5 @@
+@model List<Vocabulary>
+@{ViewData["Title"]="Từ vựng";}
+<partial name="_AdminNav"/><h1>Từ vựng</h1><p><a class="btn" asp-action="EditVocabulary">Thêm mới</a></p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Chủ đề (để trống cho từ điển độc lập)</th><th>Nguồn chủ đề (bắt buộc cho bài học chính thức)</th><th>Từ tiếng Anh</th><th>Nghĩa tiếng Việt</th><th>Thao tác</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Id</td><td>@item.TopicId</td><td>@item.TopicSourceId</td><td>@item.Word</td><td>@item.MeaningVi</td><td><a asp-action="EditVocabulary" asp-route-id="@item.Id">Sửa</a> <form method="post" asp-action="DeleteVocabulary" data-confirm="Xoá bản ghi này và dữ liệu phụ thuộc (nếu có)?"><input type="hidden" name="id" value="@item.Id"/><button class="btn secondary">Xoá</button></form></td></tr>}</tbody></table></div>
+@if(Model.Count==0){<p>Chưa có dữ liệu.</p>}

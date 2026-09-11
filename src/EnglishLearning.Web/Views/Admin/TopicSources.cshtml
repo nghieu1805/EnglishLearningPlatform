@@ -1,0 +1,5 @@
+@model List<TopicSource>
+@{ViewData["Title"]="Nguồn SGK / Unit";}
+<partial name="_AdminNav"/><h1>Nguồn SGK / Unit</h1><p><a class="btn" asp-action="EditTopicSource">Thêm mới</a></p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Chủ đề</th><th>Tên SGK, bộ sách, lớp, phiên bản</th><th>Tên chủ đề gốc</th><th>Unit / bài / trang</th><th>Thao tác</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Id</td><td>@item.TopicId</td><td>@item.Textbook</td><td>@item.OriginalTopicName</td><td>@item.Unit</td><td><a asp-action="EditTopicSource" asp-route-id="@item.Id">Sửa</a> <form method="post" asp-action="DeleteTopicSource" data-confirm="Xoá bản ghi này và dữ liệu phụ thuộc (nếu có)?"><input type="hidden" name="id" value="@item.Id"/><button class="btn secondary">Xoá</button></form></td></tr>}</tbody></table></div>
+@if(Model.Count==0){<p>Chưa có dữ liệu.</p>}

@@ -1,0 +1,4 @@
+@model LoginModel
+@{ViewData["Title"]="Chào mừng trở lại";}
+<section class="auth"><p class="eyebrow">EAPP ACCOUNT</p><h1>Chào mừng trở lại</h1><form method="post" asp-action="Login"><div asp-validation-summary="All" role="alert"></div><label asp-for="Email">Email</label><input asp-for="Email"/><span asp-validation-for="Email"></span>
+<label asp-for="Password">Mật khẩu</label><input asp-for="Password"/><span asp-validation-for="Password"></span><input type="hidden" asp-for="ReturnUrl"/><label><input asp-for="RememberMe"/> Ghi nhớ đăng nhập</label><button class="btn">Chào mừng trở lại</button></form></section>

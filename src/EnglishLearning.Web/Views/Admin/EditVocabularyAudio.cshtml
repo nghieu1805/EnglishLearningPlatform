@@ -1,0 +1,6 @@
+@model VocabularyAudio
+@{ViewData["Title"]="Chỉnh sửa Âm thanh";}
+<partial name="_AdminNav"/><h1>Chỉnh sửa Âm thanh</h1><form class="editor" asp-action="EditVocabularyAudio" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="VocabularyId">Từ vựng</label><select asp-for="VocabularyId" asp-items="ViewBag.Words"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="VocabularyId"></span></div>
+<div><label asp-for="Accent">UK hoặc US</label><input asp-for="Accent" type="text"/><span asp-validation-for="Accent"></span></div>
+<div><label asp-for="Url">URL HTTPS bản ghi âm được phép sử dụng</label><input asp-for="Url" type="text"/><span asp-validation-for="Url"></span></div>
+<div class="actions"><button class="btn">Lưu</button><a asp-action="VocabularyAudios">Quay lại</a></div></form>

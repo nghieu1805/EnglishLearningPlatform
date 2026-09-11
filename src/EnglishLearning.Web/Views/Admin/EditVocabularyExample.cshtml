@@ -1,0 +1,6 @@
+@model VocabularyExample
+@{ViewData["Title"]="Chỉnh sửa Ví dụ";}
+<partial name="_AdminNav"/><h1>Chỉnh sửa Ví dụ</h1><form class="editor" asp-action="EditVocabularyExample" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="VocabularyId">Từ vựng</label><select asp-for="VocabularyId" asp-items="ViewBag.Words"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="VocabularyId"></span></div>
+<div><label asp-for="Sentence">Câu ví dụ</label><textarea asp-for="Sentence"></textarea><span asp-validation-for="Sentence"></span></div>
+<div><label asp-for="TranslationVi">Dịch tiếng Việt</label><textarea asp-for="TranslationVi"></textarea><span asp-validation-for="TranslationVi"></span></div>
+<div class="actions"><button class="btn">Lưu</button><a asp-action="VocabularyExamples">Quay lại</a></div></form>

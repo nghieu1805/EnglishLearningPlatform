@@ -1,0 +1,13 @@
+@model Vocabulary
+@{ViewData["Title"]="Chỉnh sửa Từ vựng";}
+<partial name="_AdminNav"/><h1>Chỉnh sửa Từ vựng</h1><form class="editor" asp-action="EditVocabulary" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="TopicId">Chủ đề (để trống cho từ điển độc lập)</label><select asp-for="TopicId" asp-items="ViewBag.Topics"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="TopicId"></span></div>
+<div><label asp-for="TopicSourceId">Nguồn chủ đề (bắt buộc cho bài học chính thức)</label><select asp-for="TopicSourceId" asp-items="ViewBag.Sources"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="TopicSourceId"></span></div>
+<div><label asp-for="Word">Từ tiếng Anh</label><input asp-for="Word" type="text"/><span asp-validation-for="Word"></span></div>
+<div><label asp-for="MeaningVi">Nghĩa tiếng Việt</label><textarea asp-for="MeaningVi"></textarea><span asp-validation-for="MeaningVi"></span></div>
+<div><label asp-for="PartOfSpeech">Loại từ</label><input asp-for="PartOfSpeech" type="text"/><span asp-validation-for="PartOfSpeech"></span></div>
+<div><label asp-for="UkPhonetic">Phiên âm UK</label><input asp-for="UkPhonetic" type="text"/><span asp-validation-for="UkPhonetic"></span></div>
+<div><label asp-for="UsPhonetic">Phiên âm US</label><input asp-for="UsPhonetic" type="text"/><span asp-validation-for="UsPhonetic"></span></div>
+<div><label asp-for="Cefr">CEFR (để trống nếu chưa xác minh)</label><input asp-for="Cefr" type="text"/><span asp-validation-for="Cefr"></span></div>
+<div><label asp-for="RelatedWords">Từ liên quan</label><input asp-for="RelatedWords" type="text"/><span asp-validation-for="RelatedWords"></span></div>
+<div><label asp-for="WordFamily">Họ từ</label><input asp-for="WordFamily" type="text"/><span asp-validation-for="WordFamily"></span></div>
+<div class="actions"><button class="btn">Lưu</button><a asp-action="Vocabularies">Quay lại</a></div></form>

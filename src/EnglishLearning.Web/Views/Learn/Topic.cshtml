@@ -1,0 +1,8 @@
+@model TopicPage
+@{ViewData["Title"]=Model.Topic.Name;}
+<a asp-action="Grade" asp-route-id="@Model.Topic.GradeId">← @Model.Topic.Grade?.Name</a><h1>@Model.Topic.Name</h1><p>@Model.Topic.Description</p>
+@if(Model.Topic.IsDemo){<p class="notice">Nội dung minh hoạ tự viết; không đại diện cho một bộ SGK.</p>}
+@foreach(var source in Model.Topic.Sources){<p class="muted">@source.Textbook · @source.Unit · Tên gốc: @source.OriginalTopicName</p>}
+<div class="actions"><a class="btn" asp-action="Practice" asp-route-id="@Model.Topic.Id">Luyện flashcard</a>@foreach(var e in Model.Exercises){<a class="btn secondary" asp-controller="Quiz" asp-action="Take" asp-route-id="@e.Id">@e.Title →</a>}</div>
+@if(Model.Topic.Vocabulary.Count==0){<p class="empty">Chưa có từ vựng trong chủ đề này.</p>}
+<div class="cards">@foreach(var v in Model.Topic.Vocabulary){<partial name="_Word" model="v"/>}</div>

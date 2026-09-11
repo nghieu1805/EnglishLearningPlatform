@@ -1,0 +1,5 @@
+@model QuizAttempt
+@{ViewData["Title"]="Kết quả quiz";}
+<p class="eyebrow">QUIZ RESULTS</p><h1>@Model.Correct / @Model.Total câu đúng</h1><p>Điểm: @(Model.Total==0?0:Math.Round(100.0*Model.Correct/Model.Total))% · @Model.SubmittedAtUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
+@foreach(var a in Model.Answers){<article class="word-card"><span class="tag">@(a.IsCorrect?"ĐÚNG":"CẦN ÔN LẠI")</span><h3>@a.PromptSnapshot</h3><p>Bạn chọn: @a.SelectedSnapshot</p><p>Đáp án đúng: <strong>@a.CorrectSnapshot</strong></p></article>}
+<a class="btn" asp-controller="Dashboard" asp-action="Index">Xem tiến độ</a>

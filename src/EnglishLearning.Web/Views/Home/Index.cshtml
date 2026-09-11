@@ -1,0 +1,7 @@
+@model List<Grade>
+@{ViewData["Title"]="Học tiếng Anh theo lớp";}
+<section class="hero"><div><p class="eyebrow">YOUR ENGLISH JOURNEY</p><h1>Mỗi từ mới.<br/>Một bước tiến xa.</h1><p>Khám phá từ vựng theo chủ đề, luyện tập và nhìn thấy tiến bộ của bạn từ lớp 1 đến lớp 12.</p><a class="btn" href="#grades">Chọn lớp để bắt đầu →</a></div><aside class="hero-note"><span>01 / LEARN</span><h2>Learn.<br/>Practise.<br/>Remember.</h2><p>Chọn lớp → Chủ đề → Từ vựng → Quiz</p></aside></section>
+<section id="grades"><div class="section-heading"><div><p class="eyebrow">CHỌN ĐIỂM BẮT ĐẦU</p><h2>Lớp học của bạn</h2></div><p>12 lớp · 3 cấp học</p></div>
+@foreach(var level in new[]{(Title:"Tiểu học",Min:1,Max:5),(Title:"Trung học cơ sở",Min:6,Max:9),(Title:"Trung học phổ thông",Min:10,Max:12)}){
+<h3 class="level-title">@level.Title</h3><div class="grade-grid">@foreach(var grade in Model.Where(g=>g.Number>=level.Min&&g.Number<=level.Max)){<a class="grade-card" asp-controller="Learn" asp-action="Grade" asp-route-id="@grade.Id"><small>GRADE @grade.Number.ToString("00")</small><strong>@grade.Name</strong><span>Khám phá chủ đề ↗</span></a>}</div>}
+</section><p class="notice">Bản khởi đầu: 12 lớp đã sẵn sàng. Lớp 6 có nội dung DEMO để thử chức năng; nội dung SGK chính thức cần được bổ sung và đối chiếu nguồn.</p>

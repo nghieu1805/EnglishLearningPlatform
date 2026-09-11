@@ -1,0 +1,20 @@
+{
+  "checks": {
+    "json_xml": "passed",
+    "solution_project_paths": "passed",
+    "project_references": "passed",
+    "expected_mvc_view_paths": "passed",
+    "razor_partial_paths": "passed",
+    "javascript_syntax": "passed",
+    "bash_script_syntax": "passed"
+  },
+  "not_run": [
+    "dotnet restore",
+    "dotnet build",
+    "dotnet test",
+    "EF migrations",
+    "MySQL integration",
+    "browser/runtime checks"
+  ],
+  "reason": "No .NET SDK, MySQL or PowerShell in generation environment; SDK network download unavailable."
+}

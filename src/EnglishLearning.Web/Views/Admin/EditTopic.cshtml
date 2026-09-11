@@ -1,0 +1,9 @@
+@model Topic
+@{ViewData["Title"]="Chỉnh sửa Chủ đề";}
+<partial name="_AdminNav"/><h1>Chỉnh sửa Chủ đề</h1><form class="editor" asp-action="EditTopic" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="GradeId">Lớp</label><select asp-for="GradeId" asp-items="ViewBag.Grades"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="GradeId"></span></div>
+<div><label asp-for="Name">Tên chủ đề</label><input asp-for="Name" type="text"/><span asp-validation-for="Name"></span></div>
+<div><label asp-for="Description">Mô tả</label><textarea asp-for="Description"></textarea><span asp-validation-for="Description"></span></div>
+<div><label asp-for="SortOrder">Thứ tự học</label><input asp-for="SortOrder" type="number"/><span asp-validation-for="SortOrder"></span></div>
+<div><label asp-for="IsPublished">Xuất bản</label><input asp-for="IsPublished" type="checkbox"/><span asp-validation-for="IsPublished"></span></div>
+<div><label asp-for="IsDemo">Dữ liệu minh hoạ (không phải SGK)</label><input asp-for="IsDemo" type="checkbox"/><span asp-validation-for="IsDemo"></span></div>
+<div class="actions"><button class="btn">Lưu</button><a asp-action="Topics">Quay lại</a></div></form>

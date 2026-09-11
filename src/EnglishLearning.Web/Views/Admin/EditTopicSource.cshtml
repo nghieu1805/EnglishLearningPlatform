@@ -1,0 +1,7 @@
+@model TopicSource
+@{ViewData["Title"]="Chỉnh sửa Nguồn SGK / Unit";}
+<partial name="_AdminNav"/><h1>Chỉnh sửa Nguồn SGK / Unit</h1><form class="editor" asp-action="EditTopicSource" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="TopicId">Chủ đề</label><select asp-for="TopicId" asp-items="ViewBag.Topics"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="TopicId"></span></div>
+<div><label asp-for="Textbook">Tên SGK, bộ sách, lớp, phiên bản</label><input asp-for="Textbook" type="text"/><span asp-validation-for="Textbook"></span></div>
+<div><label asp-for="OriginalTopicName">Tên chủ đề gốc</label><input asp-for="OriginalTopicName" type="text"/><span asp-validation-for="OriginalTopicName"></span></div>
+<div><label asp-for="Unit">Unit / bài / trang</label><input asp-for="Unit" type="text"/><span asp-validation-for="Unit"></span></div>
+<div class="actions"><button class="btn">Lưu</button><a asp-action="TopicSources">Quay lại</a></div></form>

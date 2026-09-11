@@ -1,0 +1,4 @@
+@model EnglishLearning.Application.DTOs.QuizDto
+@{ViewData["Title"]=Model.Title;}
+<p class="eyebrow">CHECK YOUR KNOWLEDGE</p><h1>@Model.Title</h1><p>@Model.Questions.Count câu hỏi · Mỗi câu chọn một đáp án.</p>
+<form method="post" asp-action="Take" asp-route-id="@Model.Id">@foreach(var q in Model.Questions){<fieldset class="word-card"><legend>@q.Prompt</legend>@foreach(var a in q.Choices){<label class="choice"><input type="radio" name="selections[@q.Id]" value="@a.Id" required/> @a.Text</label>}</fieldset>}<button class="btn">Nộp bài và xem kết quả</button></form>

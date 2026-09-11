@@ -1,0 +1,4 @@
+@{ViewData["Title"]="Quản trị nội dung";}
+<partial name="_AdminNav"/><h1>Quản trị nội dung</h1><div class="stats"><article><strong>@ViewBag.Users</strong><span>Tài khoản</span></article><article><strong>@ViewBag.Words</strong><span>Từ vựng</span></article><article><strong>@ViewBag.Quizzes</strong><span>Lượt làm quiz</span></article></div>
+<h2>Nhập nội dung theo thứ tự</h2><ol><li>Tạo chủ đề ở trạng thái bản nháp, chọn lớp và thứ tự học.</li><li>Thêm nguồn SGK: tên sách, phiên bản, tên chủ đề gốc và Unit. Một chủ đề có thể có nhiều nguồn.</li><li>Nhập từ vựng, chọn nguồn tương ứng; bổ sung câu ví dụ và bản ghi âm.</li><li>Tạo quiz → câu hỏi → đáp án. Mỗi câu cần ít nhất 2 đáp án, đúng 1 đáp án đúng.</li><li>Đối chiếu nội dung và xuất bản chủ đề. Quiz thiếu đáp án hợp lệ sẽ chưa mở được.</li></ol>
+<p class="notice">Không tự thêm chủ đề ngoài SGK cho nội dung chính thức. Không nhập nhãn CEFR, phiên âm hoặc nguồn sách khi chưa xác minh.</p>

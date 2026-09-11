@@ -1,0 +1,5 @@
+@model List<VocabularyAudio>
+@{ViewData["Title"]="Âm thanh";}
+<partial name="_AdminNav"/><h1>Âm thanh</h1><p><a class="btn" asp-action="EditVocabularyAudio">Thêm mới</a></p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Từ vựng</th><th>UK hoặc US</th><th>URL HTTPS bản ghi âm được phép sử dụng</th><th>Thao tác</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Id</td><td>@item.VocabularyId</td><td>@item.Accent</td><td>@item.Url</td><td><a asp-action="EditVocabularyAudio" asp-route-id="@item.Id">Sửa</a> <form method="post" asp-action="DeleteVocabularyAudio" data-confirm="Xoá bản ghi này và dữ liệu phụ thuộc (nếu có)?"><input type="hidden" name="id" value="@item.Id"/><button class="btn secondary">Xoá</button></form></td></tr>}</tbody></table></div>
+@if(Model.Count==0){<p>Chưa có dữ liệu.</p>}

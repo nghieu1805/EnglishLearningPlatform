@@ -1,0 +1,4 @@
+@model ProfileModel
+@{ViewData["Title"]="Hồ sơ học sinh";}
+<section class="auth"><p class="eyebrow">EAPP ACCOUNT</p><h1>Hồ sơ học sinh</h1><form method="post" asp-action="Profile"><div asp-validation-summary="All" role="alert"></div><label asp-for="DisplayName">Họ tên</label><input asp-for="DisplayName"/><span asp-validation-for="DisplayName"></span>
+<label asp-for="CurrentGrade">Lớp hiện tại</label><input asp-for="CurrentGrade"/><span asp-validation-for="CurrentGrade"></span><button class="btn">Lưu hồ sơ</button></form></section>

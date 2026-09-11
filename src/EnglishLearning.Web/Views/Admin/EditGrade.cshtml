@@ -1,0 +1,5 @@
+@model Grade
+@{ViewData["Title"]="Chỉnh sửa Lớp";}
+<partial name="_AdminNav"/><h1>Chỉnh sửa Lớp</h1><form class="editor" asp-action="EditGrade" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="Number">Số lớp (1–12)</label><input asp-for="Number" type="number"/><span asp-validation-for="Number"></span></div>
+<div><label asp-for="Name">Tên lớp</label><input asp-for="Name" type="text"/><span asp-validation-for="Name"></span></div>
+<div class="actions"><button class="btn">Lưu</button><a asp-action="Grades">Quay lại</a></div></form>

@@ -1,0 +1,7 @@
+@model RegisterModel
+@{ViewData["Title"]="Tạo tài khoản";}
+<section class="auth"><p class="eyebrow">EAPP ACCOUNT</p><h1>Tạo tài khoản</h1><form method="post" asp-action="Register"><div asp-validation-summary="All" role="alert"></div><label asp-for="DisplayName">Họ tên</label><input asp-for="DisplayName"/><span asp-validation-for="DisplayName"></span>
+<label asp-for="Email">Email</label><input asp-for="Email"/><span asp-validation-for="Email"></span>
+<label asp-for="Password">Mật khẩu</label><input asp-for="Password"/><span asp-validation-for="Password"></span>
+<label asp-for="ConfirmPassword">Nhập lại mật khẩu</label><input asp-for="ConfirmPassword"/><span asp-validation-for="ConfirmPassword"></span>
+<label asp-for="CurrentGrade">Lớp hiện tại</label><input asp-for="CurrentGrade"/><span asp-validation-for="CurrentGrade"></span><button class="btn">Tạo tài khoản</button></form></section>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>@ViewData["Title"] · EApp</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/></head>
+<body><a class="skip-link" href="#main">Đến nội dung</a><header><nav class="shell nav-row" aria-label="Điều hướng chính">
+<a class="brand" asp-controller="Home" asp-action="Index">E<span>App</span><small>ENGLISH LEARNING</small></a>
+<div class="nav-links"><a asp-controller="Home" asp-action="Index">Lớp học</a><a asp-controller="Dictionary" asp-action="Index">Từ điển</a>
+@if(User.Identity?.IsAuthenticated==true){<a asp-controller="Dashboard" asp-action="Index">Tiến độ</a><a asp-controller="Account" asp-action="Profile">Hồ sơ</a>
+@if(User.IsInRole("Admin")){<a asp-controller="Admin" asp-action="Index">Quản trị</a>}
+<form asp-controller="Account" asp-action="Logout" method="post"><button class="btn secondary">Đăng xuất</button></form>
+}else{<a asp-controller="Account" asp-action="Login">Đăng nhập</a><a class="btn" asp-controller="Account" asp-action="Register">Bắt đầu học</a>}</div></nav></header>
+<main class="shell" id="main">@if(TempData["Message"] is string message){<p class="notice" role="status">@message</p>}@RenderBody()</main>
+<footer class="shell">EApp · Học từng từ, tiến bộ mỗi ngày. <span>Grades 1–12</span></footer>
+<script src="~/js/site.js" asp-append-version="true" defer></script>@await RenderSectionAsync("Scripts",required:false)
+</body></html>

@@ -1,0 +1,5 @@
+@model Question
+@{ViewData["Title"]="Chỉnh sửa Câu hỏi";}
+<partial name="_AdminNav"/><h1>Chỉnh sửa Câu hỏi</h1><form class="editor" asp-action="EditQuestion" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="ExerciseId">Quiz</label><select asp-for="ExerciseId" asp-items="ViewBag.Exercises"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="ExerciseId"></span></div>
+<div><label asp-for="Prompt">Câu hỏi</label><textarea asp-for="Prompt"></textarea><span asp-validation-for="Prompt"></span></div>
+<div class="actions"><button class="btn">Lưu</button><a asp-action="Questions">Quay lại</a></div></form>

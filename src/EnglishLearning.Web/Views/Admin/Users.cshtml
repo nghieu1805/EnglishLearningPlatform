@@ -1,0 +1,3 @@
+@model List<EnglishLearning.Infrastructure.Identity.ApplicationUser>
+@{ViewData["Title"]="Người dùng";}
+<partial name="_AdminNav"/><h1>Người dùng</h1><p>Danh sách chỉ đọc, tối đa 200 tài khoản. Chưa có giao diện cấp quyền hoặc xoá tài khoản.</p><div class="table-wrap"><table><thead><tr><th>Email</th><th>Họ tên</th><th>Lớp</th></tr></thead><tbody>@foreach(var u in Model){<tr><td>@u.Email</td><td>@u.DisplayName</td><td>@u.CurrentGrade</td></tr>}</tbody></table></div>
