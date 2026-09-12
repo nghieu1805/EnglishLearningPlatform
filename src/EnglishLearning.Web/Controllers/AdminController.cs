@@ -2019,9 +2019,10 @@ public class AdminController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditQuestion(
-        [Bind("Id,ExerciseId,Prompt")]
-        Question input)
+    [Bind("Id,ExerciseId,Prompt")]
+    Question input)
     {
         await ValidateContent(input);
 
@@ -2064,25 +2065,39 @@ public class AdminController(
 
         TempData["Message"] = "Đã lưu câu hỏi.";
 
-        return RedirectToAction(nameof(Questions));
+        return RedirectToAction(
+            nameof(QuizDetails),
+            new
+            {
+                id = input.ExerciseId
+            });
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteQuestion(int id)
     {
-        var entity = await db.Questions.FindAsync(id);
+        var entity =
+            await db.Questions.FindAsync(id);
 
         if (entity is null)
         {
             return NotFound();
         }
 
+        int exerciseId = entity.ExerciseId;
+
         db.Questions.Remove(entity);
 
         await SaveDeleteChanges();
 
-        return RedirectToAction(nameof(Questions));
+        return RedirectToAction(
+            nameof(QuizDetails),
+            new
+            {
+                id = exerciseId
+            });
     }
 
     // =====================================================
@@ -2140,9 +2155,10 @@ public class AdminController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditAnswer(
-        [Bind("Id,QuestionId,Text,IsCorrect")]
-        Answer input)
+     [Bind("Id,QuestionId,Text,IsCorrect")]
+    Answer input)
     {
         await ValidateContent(input);
 
@@ -2153,13 +2169,26 @@ public class AdminController(
             return View(input);
         }
 
+        int? exerciseId = await db.Questions
+            .Where(question =>
+                question.Id == input.QuestionId)
+            .Select(question =>
+                (int?)question.ExerciseId)
+            .FirstOrDefaultAsync();
+
+        if (!exerciseId.HasValue)
+        {
+            return NotFound();
+        }
+
         if (input.Id == 0)
         {
             db.Answers.Add(input);
         }
         else
         {
-            var entity = await db.Answers.FindAsync(input.Id);
+            var entity =
+                await db.Answers.FindAsync(input.Id);
 
             if (entity is null)
             {
@@ -2184,7 +2213,12 @@ public class AdminController(
 
         TempData["Message"] = "Đã lưu đáp án.";
 
-        return RedirectToAction(nameof(Answers));
+        return RedirectToAction(
+            nameof(QuizDetails),
+            new
+            {
+                id = exerciseId.Value
+            });
     }
 
     [Authorize(Roles = "Admin")]
