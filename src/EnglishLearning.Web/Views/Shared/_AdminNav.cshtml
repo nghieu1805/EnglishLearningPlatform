@@ -1,1 +1,64 @@
-<nav class="admin-links" aria-label="Quản trị"><a asp-action="Index">Tổng quan</a><a asp-action="Grades">Grade</a><a asp-action="Topics">Topic</a><a asp-action="TopicSources">TopicSource</a><a asp-action="Vocabularies">Vocabulary</a><a asp-action="VocabularyExamples">VocabularyExample</a><a asp-action="VocabularyAudios">VocabularyAudio</a><a asp-action="Exercises">Exercise</a><a asp-action="Questions">Question</a><a asp-action="Answers">Answer</a><a asp-action="Users">Người dùng</a></nav>
+<nav class="admin-links"
+     aria-label="Quản lý nội dung">
+
+    <a asp-controller="Admin"
+       asp-action="Index">
+        Tổng quan
+    </a>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-controller="Admin"
+           asp-action="Grades">
+            Lớp
+        </a>
+    }
+
+    <a asp-controller="Admin"
+       asp-action="Topics">
+        Chủ đề
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="TopicSources">
+        Nguồn SGK
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="Vocabularies">
+        Từ vựng
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="VocabularyExamples">
+        Ví dụ
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="VocabularyAudios">
+        Âm thanh
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="Exercises">
+        Quiz
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="Questions">
+        Câu hỏi
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="Answers">
+        Đáp án
+    </a>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-controller="Admin"
+           asp-action="Users">
+            Người dùng
+        </a>
+    }
+</nav>

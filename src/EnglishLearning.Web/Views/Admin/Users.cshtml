@@ -1,3 +1,226 @@
-@model List<EnglishLearning.Infrastructure.Identity.ApplicationUser>
-@{ViewData["Title"]="Người dùng";}
-<partial name="_AdminNav"/><h1>Người dùng</h1><p>Danh sách chỉ đọc, tối đa 200 tài khoản. Chưa có giao diện cấp quyền hoặc xoá tài khoản.</p><div class="table-wrap"><table><thead><tr><th>Email</th><th>Họ tên</th><th>Lớp</th></tr></thead><tbody>@foreach(var u in Model){<tr><td>@u.Email</td><td>@u.DisplayName</td><td>@u.CurrentGrade</td></tr>}</tbody></table></div>
+@model EnglishLearning.Web.ViewModels.UserListViewModel
+
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+<partial name="_AdminNav" />
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert">
+        @message
+    </div>
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">USER MANAGEMENT</p>
+        <h1>Quản lý người dùng</h1>
+    </div>
+
+    <p>@Model.TotalItems tài khoản</p>
+</div>
+
+<form asp-controller="Admin"
+      asp-action="Users"
+      method="get"
+      class="search">
+
+    <label class="visually-hidden"
+           for="search">
+        Tìm người dùng
+    </label>
+
+    <input id="search"
+           name="search"
+           value="@Model.Search"
+           maxlength="100"
+           placeholder="Tìm theo email hoặc họ tên" />
+
+    <button class="btn"
+            type="submit">
+        Tìm kiếm
+    </button>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Search))
+    {
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="Users">
+            Xoá bộ lọc
+        </a>
+    }
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="empty">
+        Không tìm thấy tài khoản.
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Họ tên</th>
+                    <th>Lớp</th>
+                    <th>Role hiện tại</th>
+                    <th>Đổi role</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var user in Model.Items)
+                {
+                    bool isAdmin =
+                    user.Roles.Contains("Admin");
+
+                    <tr>
+                        <td>@user.Email</td>
+
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(user.DisplayName))
+                            {
+                                <span>—</span>
+                            }
+                            else
+                            {
+                                @user.DisplayName
+                            }
+                        </td>
+
+                        <td>
+                            @(user.CurrentGrade?.ToString() ?? "—")
+                        </td>
+
+                        <td>
+                            @if (user.Roles.Count == 0)
+                            {
+                                <span>Chưa có role</span>
+                            }
+                            else
+                            {
+                                @string.Join(", ", user.Roles)
+                            }
+                        </td>
+
+                        <td>
+                            @if (isAdmin)
+                            {
+                                <span class="tag">
+                                    Tài khoản Admin
+                                </span>
+                            }
+                            else
+                            {
+                                <form asp-controller="Admin"
+                                      asp-action="ChangeUserRole"
+                                      method="post"
+                                      asp-antiforgery="true"
+                                      class="actions">
+
+                                    <input type="hidden"
+                                           name="UserId"
+                                           value="@user.Id" />
+
+                                    <input type="hidden"
+                                           name="Search"
+                                           value="@Model.Search" />
+
+                                    <input type="hidden"
+                                           name="Page"
+                                           value="@Model.CurrentPage" />
+
+                                    <label class="visually-hidden"
+                                           for="role-@user.Id">
+                                        Chọn role
+                                    </label>
+
+                                    <select id="role-@user.Id"
+                                            name="Role">
+
+                                        @if (user.Roles.Contains("Student"))
+                                        {
+                                            <option value="Student"
+                                                    selected>
+                                                Student
+                                            </option>
+
+                                            <option value="Staff">
+                                                Staff
+                                            </option>
+                                        }
+                                        else if (user.Roles.Contains("Staff"))
+                                        {
+                                            <option value="Student">
+                                                Student
+                                            </option>
+
+                                            <option value="Staff"
+                                                    selected>
+                                                Staff
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Student"
+                                                    selected>
+                                                Student
+                                            </option>
+
+                                            <option value="Staff">
+                                                Staff
+                                            </option>
+                                        }
+                                    </select>
+
+                                    <button class="btn"
+                                            type="submit">
+                                        Cập nhật
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="actions"
+         aria-label="Phân trang người dùng">
+
+        @if (Model.CurrentPage > 1)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Users"
+               asp-route-search="@Model.Search"
+               asp-route-page="@(Model.CurrentPage - 1)">
+                ← Trang trước
+            </a>
+        }
+
+        <span>
+            Trang @Model.CurrentPage / @Model.TotalPages
+        </span>
+
+        @if (Model.CurrentPage < Model.TotalPages)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Users"
+               asp-route-search="@Model.Search"
+               asp-route-page="@(Model.CurrentPage + 1)">
+                Trang sau →
+            </a>
+        }
+    </nav>
+}

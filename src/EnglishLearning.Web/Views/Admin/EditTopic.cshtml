@@ -1,9 +1,154 @@
 @model Topic
-@{ViewData["Title"]="Chỉnh sửa Chủ đề";}
-<partial name="_AdminNav"/><h1>Chỉnh sửa Chủ đề</h1><form class="editor" asp-action="EditTopic" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="GradeId">Lớp</label><select asp-for="GradeId" asp-items="ViewBag.Grades"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="GradeId"></span></div>
-<div><label asp-for="Name">Tên chủ đề</label><input asp-for="Name" type="text"/><span asp-validation-for="Name"></span></div>
-<div><label asp-for="Description">Mô tả</label><textarea asp-for="Description"></textarea><span asp-validation-for="Description"></span></div>
-<div><label asp-for="SortOrder">Thứ tự học</label><input asp-for="SortOrder" type="number"/><span asp-validation-for="SortOrder"></span></div>
-<div><label asp-for="IsPublished">Xuất bản</label><input asp-for="IsPublished" type="checkbox"/><span asp-validation-for="IsPublished"></span></div>
-<div><label asp-for="IsDemo">Dữ liệu minh hoạ (không phải SGK)</label><input asp-for="IsDemo" type="checkbox"/><span asp-validation-for="IsDemo"></span></div>
-<div class="actions"><button class="btn">Lưu</button><a asp-action="Topics">Quay lại</a></div></form>
+
+@{
+    var isNew = Model.Id == 0;
+
+    ViewData["Title"] = isNew
+        ? "Thêm chủ đề"
+        : "Chỉnh sửa chủ đề";
+}
+
+<partial name="_AdminNav" />
+
+<p class="eyebrow">
+    TOPIC MANAGEMENT
+</p>
+
+<h1>
+    @(isNew ? "Thêm chủ đề" : "Chỉnh sửa chủ đề")
+</h1>
+
+@if (User.IsInRole("Admin"))
+{
+    <div class="notice">
+        Admin có thể chỉnh sửa, đặt dữ liệu Demo
+        và xuất bản chủ đề.
+    </div>
+}
+else
+{
+    <div class="notice">
+        Staff có thể thêm hoặc chỉnh sửa nội dung.
+        Chủ đề mới sẽ được lưu dưới dạng bản nháp
+        để Admin kiểm tra và xuất bản.
+    </div>
+}
+
+<form asp-controller="Admin"
+      asp-action="EditTopic"
+      method="post"
+      class="editor">
+
+    <div asp-validation-summary="All"
+         role="alert">
+    </div>
+
+    <input type="hidden"
+           asp-for="Id" />
+
+    <div>
+        <label asp-for="GradeId">
+            Lớp
+        </label>
+
+        <select asp-for="GradeId"
+                asp-items="ViewBag.Grades">
+
+            <option value="">
+                — Chọn lớp —
+            </option>
+        </select>
+
+        <span asp-validation-for="GradeId"></span>
+    </div>
+
+    <div>
+        <label asp-for="Name">
+            Tên chủ đề
+        </label>
+
+        <input asp-for="Name"
+               maxlength="160"
+               placeholder="Ví dụ: School" />
+
+        <span asp-validation-for="Name"></span>
+    </div>
+
+    <div>
+        <label asp-for="Description">
+            Mô tả
+        </label>
+
+        <textarea asp-for="Description"
+                  maxlength="1000"
+                  rows="5"
+                  placeholder="Mô tả ngắn về nội dung chủ đề">
+        </textarea>
+
+        <span asp-validation-for="Description"></span>
+    </div>
+
+    <div>
+        <label asp-for="SortOrder">
+            Thứ tự học
+        </label>
+
+        <input asp-for="SortOrder"
+               type="number"
+               min="0"
+               step="1" />
+
+        <span asp-validation-for="SortOrder"></span>
+
+        <small class="muted">
+            Số nhỏ hơn sẽ được hiển thị trước.
+        </small>
+    </div>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <div>
+            <label>
+                <input asp-for="IsPublished" />
+
+                Xuất bản chủ đề
+            </label>
+
+            <span asp-validation-for="IsPublished"></span>
+
+            <small class="muted">
+                Chỉ bật sau khi đã kiểm tra nguồn SGK
+                và từ vựng của chủ đề.
+            </small>
+        </div>
+
+        <div>
+            <label>
+                <input asp-for="IsDemo" />
+
+                Đây là dữ liệu Demo
+            </label>
+
+            <span asp-validation-for="IsDemo"></span>
+
+            <small class="muted">
+                Dữ liệu Demo chỉ dùng để thử chức năng,
+                không phải nội dung SGK chính thức.
+            </small>
+        </div>
+    }
+
+    <div class="actions">
+        <button class="btn"
+                type="submit">
+
+            @(isNew ? "Thêm chủ đề" : "Lưu thay đổi")
+        </button>
+
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="Topics">
+            Quay lại
+        </a>
+    </div>
+</form>
