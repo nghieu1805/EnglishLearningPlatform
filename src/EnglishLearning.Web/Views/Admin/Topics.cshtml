@@ -1,5 +1,256 @@
-@model List<Topic>
-@{ViewData["Title"]="Chủ đề";}
-<partial name="_AdminNav"/><h1>Chủ đề</h1><p><a class="btn" asp-action="EditTopic">Thêm mới</a></p>
-<div class="table-wrap"><table><thead><tr><th>ID</th><th>Lớp</th><th>Tên chủ đề</th><th>Mô tả</th><th>Thứ tự học</th><th>Thao tác</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Id</td><td>@item.GradeId</td><td>@item.Name</td><td>@item.Description</td><td>@item.SortOrder</td><td><a asp-action="EditTopic" asp-route-id="@item.Id">Sửa</a> <form method="post" asp-action="DeleteTopic" data-confirm="Xoá bản ghi này và dữ liệu phụ thuộc (nếu có)?"><input type="hidden" name="id" value="@item.Id"/><button class="btn secondary">Xoá</button></form></td></tr>}</tbody></table></div>
-@if(Model.Count==0){<p>Chưa có dữ liệu.</p>}
+@model EnglishLearning.Web.ViewModels.TopicListViewModel
+
+@{
+    ViewData["Title"] = "Quản lý chủ đề";
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<partial name="_AdminNav" />
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert">
+        @message
+    </div>
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">TOPIC MANAGEMENT</p>
+        <h1>Quản lý chủ đề</h1>
+        <p>@Model.TotalItems chủ đề</p>
+    </div>
+
+    <a class="btn"
+       asp-controller="Admin"
+       asp-action="EditTopic"
+       asp-route-id="0">
+        + Thêm chủ đề
+    </a>
+</div>
+
+<form asp-controller="Admin"
+      asp-action="Topics"
+      method="get"
+      class="search">
+
+    <div>
+        <label for="search">
+            Tìm kiếm
+        </label>
+
+        <input id="search"
+               name="search"
+               value="@Model.Search"
+               maxlength="100"
+               placeholder="Tên hoặc mô tả chủ đề" />
+    </div>
+
+    <div>
+        <label for="gradeId">
+            Lớp
+        </label>
+
+        <select id="gradeId"
+                name="gradeId"
+                asp-items="ViewBag.Grades">
+            <option value="">Tất cả lớp</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="status">
+            Trạng thái
+        </label>
+
+        <select id="status"
+                name="status">
+
+            <option value=""
+                    selected="@(string.IsNullOrEmpty(Model.Status) ? "selected" : null)">
+                Tất cả trạng thái
+            </option>
+
+            <option value="draft"
+                    selected="@(Model.Status == "draft" ? "selected" : null)">
+                Bản nháp
+            </option>
+
+            <option value="published"
+                    selected="@(Model.Status == "published" ? "selected" : null)">
+                Đã xuất bản
+            </option>
+
+            <option value="official"
+                    selected="@(Model.Status == "official" ? "selected" : null)">
+                Nội dung chính thức
+            </option>
+
+            <option value="demo"
+                    selected="@(Model.Status == "demo" ? "selected" : null)">
+                Dữ liệu demo
+            </option>
+        </select>
+    </div>
+
+    <div class="actions">
+        <button class="btn"
+                type="submit">
+            Lọc dữ liệu
+        </button>
+
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="Topics">
+            Xoá bộ lọc
+        </a>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="empty">
+        Không tìm thấy chủ đề phù hợp.
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Lớp</th>
+                    <th>Chủ đề</th>
+                    <th>Trạng thái</th>
+                    <th>Nguồn SGK</th>
+                    <th>Từ vựng</th>
+                    <th>Thứ tự</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var topic in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            @topic.GradeName
+                        </td>
+
+                        <td>
+                            <strong>@topic.Name</strong>
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                                topic.Description))
+                            {
+                                <div>
+                                    @topic.Description
+                                </div>
+                            }
+                        </td>
+
+                        <td>
+                            @if (topic.IsDemo)
+                            {
+                                <span class="tag">
+                                    Demo
+                                </span>
+                            }
+                            else if (topic.IsPublished)
+                            {
+                                <span class="tag">
+                                    Đã xuất bản
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="tag">
+                                    Bản nháp
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @topic.SourceCount
+                        </td>
+
+                        <td>
+                            @topic.VocabularyCount
+                        </td>
+
+                        <td>
+                            @topic.SortOrder
+                        </td>
+
+                        <td>
+                            <div class="actions">
+                                <a class="btn secondary"
+                                   asp-controller="Admin"
+                                   asp-action="EditTopic"
+                                   asp-route-id="@topic.Id">
+                                    Sửa
+                                </a>
+
+                                @if (isAdmin)
+                                {
+                                    <form asp-controller="Admin"
+                                          asp-action="DeleteTopic"
+                                          method="post"
+                                          asp-antiforgery="true">
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@topic.Id" />
+
+                                        <button class="btn danger"
+                                                type="submit"
+                                                onclick="return confirm('Bạn có chắc muốn xoá chủ đề này không?');">
+                                            Xoá
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="actions"
+         aria-label="Phân trang chủ đề">
+
+        @if (Model.CurrentPage > 1)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Topics"
+               asp-route-search="@Model.Search"
+               asp-route-gradeId="@Model.GradeId"
+               asp-route-status="@Model.Status"
+               asp-route-page="@(Model.CurrentPage - 1)">
+                ← Trang trước
+            </a>
+        }
+
+        <span>
+            Trang @Model.CurrentPage / @Model.TotalPages
+        </span>
+
+        @if (Model.CurrentPage < Model.TotalPages)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Topics"
+               asp-route-search="@Model.Search"
+               asp-route-gradeId="@Model.GradeId"
+               asp-route-status="@Model.Status"
+               asp-route-page="@(Model.CurrentPage + 1)">
+                Trang sau →
+            </a>
+        }
+    </nav>
+}

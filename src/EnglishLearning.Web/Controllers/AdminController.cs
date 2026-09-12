@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace EnglishLearning.Web.Controllers;
 
 [Authorize(Roles = "Admin,Staff")]
@@ -747,14 +748,126 @@ public class AdminController(
     // =====================================================
 
     [HttpGet]
-    public async Task<IActionResult> Topics()
+    public async Task<IActionResult> Topics(
+        string? search,
+        int? gradeId,
+        string? status,
+        int page = 1)
     {
-        return View(
-            await db.Topics
+        const int pageSize = 15;
+
+        search = search?.Trim() ?? string.Empty;
+        status = status?.Trim().ToLowerInvariant() ?? string.Empty;
+        page = Math.Max(page, 1);
+
+        string[] allowedStatuses =
+        [
+            "",
+        "draft",
+        "published",
+        "demo",
+        "official"
+        ];
+
+        if (!allowedStatuses.Contains(status))
+        {
+            status = string.Empty;
+        }
+
+        var query = db.Topics
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(topic =>
+                topic.Name.Contains(search) ||
+                (topic.Description != null &&
+                 topic.Description.Contains(search)));
+        }
+
+        if (gradeId.HasValue)
+        {
+            query = query.Where(topic =>
+                topic.GradeId == gradeId.Value);
+        }
+
+        query = status switch
+        {
+            "draft" => query.Where(topic =>
+                !topic.IsPublished),
+
+            "published" => query.Where(topic =>
+                topic.IsPublished),
+
+            "demo" => query.Where(topic =>
+                topic.IsDemo),
+
+            "official" => query.Where(topic =>
+                !topic.IsDemo),
+
+            _ => query
+        };
+
+        int totalItems = await query.CountAsync();
+
+        int totalPages = Math.Max(
+            1,
+            (int)Math.Ceiling(
+                totalItems / (double)pageSize));
+
+        if (page > totalPages)
+        {
+            page = totalPages;
+        }
+
+        var items = await query
+            .OrderBy(topic => topic.Grade!.Number)
+            .ThenBy(topic => topic.SortOrder)
+            .ThenBy(topic => topic.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(topic =>
+                new TopicListItemViewModel
+                {
+                    Id = topic.Id,
+                    GradeId = topic.GradeId,
+                    GradeName = topic.Grade!.Name,
+                    Name = topic.Name,
+                    Description = topic.Description,
+                    SortOrder = topic.SortOrder,
+                    IsPublished = topic.IsPublished,
+                    IsDemo = topic.IsDemo,
+
+                    SourceCount = db.TopicSources.Count(source =>
+                        source.TopicId == topic.Id),
+
+                    VocabularyCount = db.Vocabularies.Count(vocabulary =>
+                        vocabulary.TopicId == topic.Id)
+                })
+            .ToListAsync();
+
+        ViewBag.Grades = new SelectList(
+            await db.Grades
                 .AsNoTracking()
-                .OrderBy(topic => topic.GradeId)
-                .ThenBy(topic => topic.SortOrder)
-                .ToListAsync());
+                .OrderBy(grade => grade.Number)
+                .ToListAsync(),
+            "Id",
+            "Name",
+            gradeId);
+
+        var model = new TopicListViewModel
+        {
+            Items = items,
+            Search = search,
+            GradeId = gradeId,
+            Status = status,
+            CurrentPage = page,
+            TotalPages = totalPages,
+            TotalItems = totalItems
+        };
+
+        return View(model);
     }
 
     [HttpGet]
