@@ -1,0 +1,200 @@
+﻿@model EnglishLearning.Web.ViewModels.QuizDetailViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết Quiz";
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<partial name="_AdminNav" />
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert">
+        @message
+    </div>
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">QUIZ DETAILS</p>
+        <h1>@Model.Title</h1>
+
+        <p>
+            @Model.GradeName / @Model.TopicName
+        </p>
+    </div>
+
+    <div class="actions">
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="Exercises">
+            ← Danh sách Quiz
+        </a>
+
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="EditExercise"
+           asp-route-id="@Model.Id">
+            Sửa Quiz
+        </a>
+
+        <a class="btn"
+           asp-controller="Admin"
+           asp-action="EditQuestion"
+           asp-route-id="0"
+           asp-route-exerciseId="@Model.Id">
+            + Thêm câu hỏi
+        </a>
+    </div>
+</div>
+
+@if (Model.Questions.Count == 0)
+{
+    <div class="empty">
+        Quiz này chưa có câu hỏi.
+    </div>
+}
+else
+{
+    @foreach (var question in Model.Questions)
+    {
+        <section class="admin-menu">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">
+                        QUESTION #@question.Id
+                    </p>
+
+                    <h2>@question.Prompt</h2>
+
+                    @if (question.IsValid)
+                    {
+                        <span class="tag">
+                            Hợp lệ
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="tag">
+                            Chưa hợp lệ
+                        </span>
+
+                        <p>
+                            Câu hỏi phải có ít nhất hai đáp án
+                            và đúng một đáp án chính xác.
+                        </p>
+                    }
+                </div>
+
+                <div class="actions">
+                    <a class="btn secondary"
+                       asp-controller="Admin"
+                       asp-action="EditQuestion"
+                       asp-route-id="@question.Id">
+                        Sửa câu hỏi
+                    </a>
+
+                    <a class="btn"
+                       asp-controller="Admin"
+                       asp-action="EditAnswer"
+                       asp-route-id="0"
+                       asp-route-questionId="@question.Id">
+                        + Thêm đáp án
+                    </a>
+
+                    @if (isAdmin)
+                    {
+                        <form asp-controller="Admin"
+                              asp-action="DeleteQuestion"
+                              method="post"
+                              asp-antiforgery="true">
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@question.Id" />
+
+                            <button class="btn secondary"
+                                    type="submit"
+                                    onclick="return confirm('Bạn có chắc muốn xoá câu hỏi này?');">
+                                Xoá câu hỏi
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            @if (question.Answers.Count == 0)
+            {
+                <div class="empty">
+                    Câu hỏi này chưa có đáp án.
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Đáp án</th>
+                                <th>Kết quả</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var answer in question.Answers)
+                            {
+                                <tr>
+                                    <td>@answer.Text</td>
+
+                                    <td>
+                                        @if (answer.IsCorrect)
+                                        {
+                                            <span class="tag">
+                                                Đáp án đúng
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>Đáp án sai</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="actions">
+                                            <a class="btn secondary"
+                                               asp-controller="Admin"
+                                               asp-action="EditAnswer"
+                                               asp-route-id="@answer.Id">
+                                                Sửa
+                                            </a>
+
+                                            @if (isAdmin)
+                                            {
+                                                <form asp-controller="Admin"
+                                                      asp-action="DeleteAnswer"
+                                                      method="post"
+                                                      asp-antiforgery="true">
+
+                                                    <input type="hidden"
+                                                           name="id"
+                                                           value="@answer.Id" />
+
+                                                    <button class="btn secondary"
+                                                            type="submit"
+                                                            onclick="return confirm('Bạn có chắc muốn xoá đáp án này?');">
+                                                        Xoá
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+}

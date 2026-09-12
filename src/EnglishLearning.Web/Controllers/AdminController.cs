@@ -1593,13 +1593,212 @@ public class AdminController(
     // =====================================================
 
     [HttpGet]
-    public async Task<IActionResult> Exercises()
+    public async Task<IActionResult> Exercises(
+      string? search,
+      int? gradeId,
+      int? topicId,
+      string? status,
+      int page = 1)
     {
-        return View(
-            await db.Exercises
+        const int pageSize = 15;
+
+        search = search?.Trim() ?? string.Empty;
+        status = status?.Trim().ToLowerInvariant() ?? string.Empty;
+        page = Math.Max(page, 1);
+
+        string[] allowedStatuses =
+        [
+            "",
+        "ready",
+        "incomplete"
+        ];
+
+        if (!allowedStatuses.Contains(status))
+        {
+            status = string.Empty;
+        }
+
+        var query = db.Exercises
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(exercise =>
+                exercise.Title.Contains(search) ||
+                db.Topics.Any(topic =>
+                    topic.Id == exercise.TopicId &&
+                    topic.Name.Contains(search)));
+        }
+
+        if (gradeId.HasValue)
+        {
+            query = query.Where(exercise =>
+                db.Topics.Any(topic =>
+                    topic.Id == exercise.TopicId &&
+                    topic.GradeId == gradeId.Value));
+        }
+
+        if (topicId.HasValue)
+        {
+            query = query.Where(exercise =>
+                exercise.TopicId == topicId.Value);
+        }
+
+        if (status == "ready")
+        {
+            query = query.Where(exercise =>
+                db.Questions.Any(question =>
+                    question.ExerciseId == exercise.Id) &&
+
+                !db.Questions.Any(question =>
+                    question.ExerciseId == exercise.Id &&
+                    (
+                        db.Answers.Count(answer =>
+                            answer.QuestionId == question.Id) < 2 ||
+
+                        db.Answers.Count(answer =>
+                            answer.QuestionId == question.Id &&
+                            answer.IsCorrect) != 1
+                    )));
+        }
+
+        if (status == "incomplete")
+        {
+            query = query.Where(exercise =>
+                !db.Questions.Any(question =>
+                    question.ExerciseId == exercise.Id) ||
+
+                db.Questions.Any(question =>
+                    question.ExerciseId == exercise.Id &&
+                    (
+                        db.Answers.Count(answer =>
+                            answer.QuestionId == question.Id) < 2 ||
+
+                        db.Answers.Count(answer =>
+                            answer.QuestionId == question.Id &&
+                            answer.IsCorrect) != 1
+                    )));
+        }
+
+        int totalItems = await query.CountAsync();
+
+        int totalPages = Math.Max(
+            1,
+            (int)Math.Ceiling(
+                totalItems / (double)pageSize));
+
+        if (page > totalPages)
+        {
+            page = totalPages;
+        }
+
+        var items = await query
+            .OrderBy(exercise => exercise.Title)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(exercise =>
+                new QuizListItemViewModel
+                {
+                    Id = exercise.Id,
+                    TopicId = exercise.TopicId,
+                    Title = exercise.Title,
+
+                    GradeName = db.Topics
+                        .Where(topic =>
+                            topic.Id == exercise.TopicId)
+                        .Select(topic =>
+                            topic.Grade!.Name)
+                        .FirstOrDefault() ?? "—",
+
+                    TopicName = db.Topics
+                        .Where(topic =>
+                            topic.Id == exercise.TopicId)
+                        .Select(topic => topic.Name)
+                        .FirstOrDefault() ?? "—",
+
+                    QuestionCount =
+                        db.Questions.Count(question =>
+                            question.ExerciseId ==
+                            exercise.Id),
+
+                    AnswerCount =
+                        db.Answers.Count(answer =>
+                            db.Questions.Any(question =>
+                                question.Id ==
+                                answer.QuestionId &&
+                                question.ExerciseId ==
+                                exercise.Id)),
+
+                    InvalidQuestionCount =
+                        db.Questions.Count(question =>
+                            question.ExerciseId ==
+                            exercise.Id &&
+                            (
+                                db.Answers.Count(answer =>
+                                    answer.QuestionId ==
+                                    question.Id) < 2 ||
+
+                                db.Answers.Count(answer =>
+                                    answer.QuestionId ==
+                                    question.Id &&
+                                    answer.IsCorrect) != 1
+                            ))
+                })
+            .ToListAsync();
+
+        ViewBag.Grades = new SelectList(
+            await db.Grades
                 .AsNoTracking()
-                .OrderBy(exercise => exercise.Id)
-                .ToListAsync());
+                .OrderBy(grade => grade.Number)
+                .ToListAsync(),
+            "Id",
+            "Name",
+            gradeId);
+
+        var topicFilterQuery = db.Topics
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (gradeId.HasValue)
+        {
+            topicFilterQuery = topicFilterQuery.Where(topic =>
+                topic.GradeId == gradeId.Value);
+        }
+
+        var topicOptions = await topicFilterQuery
+            .OrderBy(topic => topic.Grade!.Number)
+            .ThenBy(topic => topic.SortOrder)
+            .ThenBy(topic => topic.Name)
+            .Select(topic => new
+            {
+                topic.Id,
+
+                Label = topic.Grade!.Name +
+                        " / " +
+                        topic.Name
+            })
+            .ToListAsync();
+
+        ViewBag.QuizTopicFilters = new SelectList(
+            topicOptions,
+            "Id",
+            "Label",
+            topicId);
+
+        var model = new QuizListViewModel
+        {
+            Items = items,
+            Search = search,
+            GradeId = gradeId,
+            TopicId = topicId,
+            Status = status,
+            CurrentPage = page,
+            TotalPages = totalPages,
+            TotalItems = totalItems
+        };
+
+        return View(model);
     }
 
     [HttpGet]
@@ -1618,7 +1817,87 @@ public class AdminController(
 
         return View(entity);
     }
+    [HttpGet]
+    public async Task<IActionResult> QuizDetails(int id)
+    {
+        var model = await db.Exercises
+            .AsNoTracking()
+            .Where(exercise => exercise.Id == id)
+            .Select(exercise =>
+                new QuizDetailViewModel
+                {
+                    Id = exercise.Id,
+                    Title = exercise.Title,
 
+                    GradeName = db.Topics
+                        .Where(topic =>
+                            topic.Id == exercise.TopicId)
+                        .Select(topic =>
+                            topic.Grade!.Name)
+                        .FirstOrDefault() ?? "—",
+
+                    TopicName = db.Topics
+                        .Where(topic =>
+                            topic.Id == exercise.TopicId)
+                        .Select(topic => topic.Name)
+                        .FirstOrDefault() ?? "—"
+                })
+            .FirstOrDefaultAsync();
+
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        model.Questions = await db.Questions
+            .AsNoTracking()
+            .Where(question =>
+                question.ExerciseId == id)
+            .OrderBy(question => question.Id)
+            .Select(question =>
+                new QuizQuestionItemViewModel
+                {
+                    Id = question.Id,
+                    Prompt = question.Prompt
+                })
+            .ToListAsync();
+
+        var questionIds = model.Questions
+            .Select(question => question.Id)
+            .ToList();
+
+        if (questionIds.Count > 0)
+        {
+            var answers = await db.Answers
+                .AsNoTracking()
+                .Where(answer =>
+                    questionIds.Contains(answer.QuestionId))
+                .OrderBy(answer => answer.Id)
+                .Select(answer => new
+                {
+                    answer.QuestionId,
+
+                    Item = new QuizAnswerItemViewModel
+                    {
+                        Id = answer.Id,
+                        Text = answer.Text,
+                        IsCorrect = answer.IsCorrect
+                    }
+                })
+                .ToListAsync();
+
+            foreach (var question in model.Questions)
+            {
+                question.Answers = answers
+                    .Where(answer =>
+                        answer.QuestionId == question.Id)
+                    .Select(answer => answer.Item)
+                    .ToList();
+            }
+        }
+
+        return View(model);
+    }
     [HttpPost]
     public async Task<IActionResult> EditExercise(
         [Bind("Id,TopicId,Title")] Exercise input)
@@ -1700,11 +1979,34 @@ public class AdminController(
     }
 
     [HttpGet]
-    public async Task<IActionResult> EditQuestion(int id = 0)
+    public async Task<IActionResult> EditQuestion(
+     int id = 0,
+     int? exerciseId = null)
     {
-        var entity = id == 0
-            ? new Question()
-            : await db.Questions.FindAsync(id);
+        Question? entity;
+
+        if (id == 0)
+        {
+            entity = new Question();
+
+            if (exerciseId.HasValue)
+            {
+                bool exerciseExists =
+                    await db.Exercises.AnyAsync(exercise =>
+                        exercise.Id == exerciseId.Value);
+
+                if (!exerciseExists)
+                {
+                    return NotFound();
+                }
+
+                entity.ExerciseId = exerciseId.Value;
+            }
+        }
+        else
+        {
+            entity = await db.Questions.FindAsync(id);
+        }
 
         if (entity is null)
         {
@@ -1798,11 +2100,34 @@ public class AdminController(
     }
 
     [HttpGet]
-    public async Task<IActionResult> EditAnswer(int id = 0)
+    public async Task<IActionResult> EditAnswer(
+     int id = 0,
+     int? questionId = null)
     {
-        var entity = id == 0
-            ? new Answer()
-            : await db.Answers.FindAsync(id);
+        Answer? entity;
+
+        if (id == 0)
+        {
+            entity = new Answer();
+
+            if (questionId.HasValue)
+            {
+                bool questionExists =
+                    await db.Questions.AnyAsync(question =>
+                        question.Id == questionId.Value);
+
+                if (!questionExists)
+                {
+                    return NotFound();
+                }
+
+                entity.QuestionId = questionId.Value;
+            }
+        }
+        else
+        {
+            entity = await db.Answers.FindAsync(id);
+        }
 
         if (entity is null)
         {

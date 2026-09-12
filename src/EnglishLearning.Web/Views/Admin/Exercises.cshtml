@@ -1,5 +1,258 @@
-@model List<Exercise>
-@{ViewData["Title"]="Quiz";}
-<partial name="_AdminNav"/><h1>Quiz</h1><p><a class="btn" asp-action="EditExercise">Thêm mới</a></p>
-<div class="table-wrap"><table><thead><tr><th>ID</th><th>Chủ đề</th><th>Tên quiz</th><th>Thao tác</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Id</td><td>@item.TopicId</td><td>@item.Title</td><td><a asp-action="EditExercise" asp-route-id="@item.Id">Sửa</a> <form method="post" asp-action="DeleteExercise" data-confirm="Xoá bản ghi này và dữ liệu phụ thuộc (nếu có)?"><input type="hidden" name="id" value="@item.Id"/><button class="btn secondary">Xoá</button></form></td></tr>}</tbody></table></div>
-@if(Model.Count==0){<p>Chưa có dữ liệu.</p>}
+@model EnglishLearning.Web.ViewModels.QuizListViewModel
+
+@{
+    ViewData["Title"] = "Quản lý Quiz";
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<partial name="_AdminNav" />
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert">
+        @message
+    </div>
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">QUIZ MANAGEMENT</p>
+        <h1>Quản lý Quiz</h1>
+        <p>@Model.TotalItems bài quiz</p>
+    </div>
+
+    <a class="btn"
+       asp-controller="Admin"
+       asp-action="EditExercise"
+       asp-route-id="0">
+        + Thêm Quiz
+    </a>
+</div>
+
+<form asp-controller="Admin"
+      asp-action="Exercises"
+      method="get"
+      class="search">
+
+    <div>
+        <label for="search">Tìm kiếm</label>
+
+        <input id="search"
+               name="search"
+               value="@Model.Search"
+               maxlength="100"
+               placeholder="Tên Quiz hoặc chủ đề" />
+    </div>
+
+    <div>
+        <label for="gradeId">Lớp</label>
+
+        <select id="gradeId"
+                name="gradeId"
+                asp-items="ViewBag.Grades">
+            <option value="">Tất cả lớp</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="topicId">Chủ đề</label>
+
+        <select id="topicId"
+                name="topicId"
+                asp-items="ViewBag.QuizTopicFilters">
+            <option value="">Tất cả chủ đề</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="status">Trạng thái</label>
+
+        <select id="status"
+                name="status">
+
+            <option value=""
+                    selected="@(string.IsNullOrEmpty(Model.Status) ? "selected" : null)">
+                Tất cả trạng thái
+            </option>
+
+            <option value="ready"
+                    selected="@(Model.Status == "ready" ? "selected" : null)">
+                Sẵn sàng
+            </option>
+
+            <option value="incomplete"
+                    selected="@(Model.Status == "incomplete" ? "selected" : null)">
+                Chưa hoàn thiện
+            </option>
+        </select>
+    </div>
+
+    <div class="actions">
+        <button class="btn"
+                type="submit">
+            Lọc dữ liệu
+        </button>
+
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="Exercises">
+            Xoá bộ lọc
+        </a>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="empty">
+        Không tìm thấy bài Quiz phù hợp.
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Lớp</th>
+                    <th>Chủ đề</th>
+                    <th>Câu hỏi</th>
+                    <th>Đáp án</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var quiz in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <strong>@quiz.Title</strong>
+                        </td>
+
+                        <td>
+                            @quiz.GradeName
+                        </td>
+
+                        <td>
+                            @quiz.TopicName
+                        </td>
+
+                        <td>
+                            @quiz.QuestionCount
+                        </td>
+
+                        <td>
+                            @quiz.AnswerCount
+                        </td>
+
+                        <td>
+                            @if (quiz.IsReady)
+                            {
+                                <span class="tag">
+                                    Sẵn sàng
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="tag">
+                                    Chưa hoàn thiện
+                                </span>
+
+                                @if (quiz.InvalidQuestionCount > 0)
+                                {
+                                    <div>
+                                        @quiz.InvalidQuestionCount câu chưa hợp lệ
+                                    </div>
+                                }
+                                else if (quiz.QuestionCount == 0)
+                                {
+                                    <div>
+                                        Chưa có câu hỏi
+                                    </div>
+                                }
+                            }
+                        </td>
+
+                        <td>
+                            <div class="actions">
+                                <a class="btn"
+                                   asp-controller="Admin"
+                                   asp-action="QuizDetails"
+                                   asp-route-id="@quiz.Id">
+                                    Quản lý
+                                </a>
+
+                                <a class="btn secondary"
+                                   asp-controller="Admin"
+                                   asp-action="EditExercise"
+                                   asp-route-id="@quiz.Id">
+                                    Sửa
+                                </a>
+
+                                @if (isAdmin)
+                                {
+                                    <form asp-controller="Admin"
+                                          asp-action="DeleteExercise"
+                                          method="post"
+                                          asp-antiforgery="true">
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@quiz.Id" />
+
+                                        <button class="btn secondary"
+                                                type="submit"
+                                                onclick="return confirm('Bạn có chắc muốn xoá bài Quiz này?');">
+                                            Xoá
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="actions"
+         aria-label="Phân trang Quiz">
+
+        @if (Model.CurrentPage > 1)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Exercises"
+               asp-route-search="@Model.Search"
+               asp-route-gradeId="@Model.GradeId"
+               asp-route-topicId="@Model.TopicId"
+               asp-route-status="@Model.Status"
+               asp-route-page="@(Model.CurrentPage - 1)">
+                ← Trang trước
+            </a>
+        }
+
+        <span>
+            Trang @Model.CurrentPage / @Model.TotalPages
+        </span>
+
+        @if (Model.CurrentPage < Model.TotalPages)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Exercises"
+               asp-route-search="@Model.Search"
+               asp-route-gradeId="@Model.GradeId"
+               asp-route-topicId="@Model.TopicId"
+               asp-route-status="@Model.Status"
+               asp-route-page="@(Model.CurrentPage + 1)">
+                Trang sau →
+            </a>
+        }
+    </nav>
+}
