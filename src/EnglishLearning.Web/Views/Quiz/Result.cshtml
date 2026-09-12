@@ -1,5 +1,143 @@
-@model QuizAttempt
-@{ViewData["Title"]="Kết quả quiz";}
-<p class="eyebrow">QUIZ RESULTS</p><h1>@Model.Correct / @Model.Total câu đúng</h1><p>Điểm: @(Model.Total==0?0:Math.Round(100.0*Model.Correct/Model.Total))% · @Model.SubmittedAtUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
-@foreach(var a in Model.Answers){<article class="word-card"><span class="tag">@(a.IsCorrect?"ĐÚNG":"CẦN ÔN LẠI")</span><h3>@a.PromptSnapshot</h3><p>Bạn chọn: @a.SelectedSnapshot</p><p>Đáp án đúng: <strong>@a.CorrectSnapshot</strong></p></article>}
-<a class="btn" asp-controller="Dashboard" asp-action="Index">Xem tiến độ</a>
+@model EnglishLearning.Domain.Entities.QuizAttempt
+
+@{
+    ViewData["Title"] = "Kết quả Quiz";
+
+    int percentage = Model.Total == 0
+        ? 0
+        : (int)Math.Round(
+            100.0 * Model.Correct / Model.Total,
+            MidpointRounding.AwayFromZero);
+}
+
+<div class="quiz-result-page">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">
+                QUIZ RESULTS
+            </p>
+
+            <h1>Kết quả Quiz</h1>
+
+            <p>
+                Hoàn thành lúc
+                <time datetime="@Model.SubmittedAtUtc.ToString("O")">
+                    @Model.SubmittedAtUtc.ToString("dd/MM/yyyy HH:mm") UTC
+                </time>
+            </p>
+        </div>
+    </div>
+
+    <section class="word-card">
+        <p class="eyebrow">
+            YOUR SCORE
+        </p>
+
+        <h2>
+            @Model.Correct / @Model.Total câu đúng
+        </h2>
+
+        <p>
+            Điểm: <strong>@percentage%</strong>
+        </p>
+
+        @if (percentage >= 80)
+        {
+            <span class="tag">
+                Hoàn thành tốt
+            </span>
+        }
+        else if (percentage >= 50)
+        {
+            <span class="tag">
+                Cần luyện tập thêm
+            </span>
+        }
+        else
+        {
+            <span class="tag">
+                Nên ôn lại từ vựng
+            </span>
+        }
+    </section>
+
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">
+                ANSWER REVIEW
+            </p>
+
+            <h2>Chi tiết đáp án</h2>
+        </div>
+    </div>
+
+    @if (Model.Answers.Count == 0)
+    {
+        <div class="empty">
+            Không có dữ liệu câu trả lời.
+        </div>
+    }
+    else
+    {
+        @for (int index = 0;
+            index < Model.Answers.Count;
+            index++)
+        {
+            var answer = Model.Answers[index];
+
+            <article class="word-card">
+                @if (answer.IsCorrect)
+                {
+                    <span class="tag">
+                        ĐÚNG
+                    </span>
+                }
+                else
+                {
+                    <span class="tag">
+                        CẦN ÔN LẠI
+                    </span>
+                }
+
+                <h3>
+                    Câu @(index + 1):
+                    @answer.PromptSnapshot
+                </h3>
+
+                <p>
+                    Bạn chọn:
+                    <strong>@answer.SelectedSnapshot</strong>
+                </p>
+
+                @if (!answer.IsCorrect)
+                {
+                    <p>
+                        Đáp án đúng:
+                        <strong>@answer.CorrectSnapshot</strong>
+                    </p>
+                }
+            </article>
+        }
+    }
+
+    <div class="actions">
+        <a class="btn"
+           asp-controller="Quiz"
+           asp-action="Take"
+           asp-route-id="@Model.ExerciseId">
+            Làm lại Quiz
+        </a>
+
+        <a class="btn secondary"
+           asp-controller="Dashboard"
+           asp-action="Index">
+            Xem tiến độ
+        </a>
+
+        <a class="btn secondary"
+           asp-controller="Home"
+           asp-action="Index">
+            Về trang chủ
+        </a>
+    </div>
+</div>

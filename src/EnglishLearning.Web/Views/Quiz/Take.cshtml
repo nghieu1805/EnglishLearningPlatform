@@ -1,4 +1,77 @@
 @model EnglishLearning.Application.DTOs.QuizDto
-@{ViewData["Title"]=Model.Title;}
-<p class="eyebrow">CHECK YOUR KNOWLEDGE</p><h1>@Model.Title</h1><p>@Model.Questions.Count câu hỏi · Mỗi câu chọn một đáp án.</p>
-<form method="post" asp-action="Take" asp-route-id="@Model.Id">@foreach(var q in Model.Questions){<fieldset class="word-card"><legend>@q.Prompt</legend>@foreach(var a in q.Choices){<label class="choice"><input type="radio" name="selections[@q.Id]" value="@a.Id" required/> @a.Text</label>}</fieldset>}<button class="btn">Nộp bài và xem kết quả</button></form>
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="quiz-page">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">
+                CHECK YOUR KNOWLEDGE
+            </p>
+
+            <h1>@Model.Title</h1>
+
+            <p>
+                @Model.Questions.Count câu hỏi ·
+                Mỗi câu chọn một đáp án.
+            </p>
+        </div>
+    </div>
+
+    <form asp-controller="Quiz"
+          asp-action="Take"
+          asp-route-id="@Model.Id"
+          method="post"
+          asp-antiforgery="true">
+
+        <div asp-validation-summary="All"
+             class="validation-summary">
+        </div>
+
+        @for (int questionIndex = 0;
+                questionIndex < Model.Questions.Count;
+                questionIndex++)
+        {
+            var question =
+            Model.Questions[questionIndex];
+
+            <fieldset class="word-card">
+                <legend>
+                    Câu @(questionIndex + 1):
+                    @question.Prompt
+                </legend>
+
+                <div class="quiz-choices">
+                    @foreach (var choice in question.Choices)
+                    {
+                        string inputId =
+                        $"question-{question.Id}-choice-{choice.Id}";
+
+                        <label class="choice"
+                               for="@inputId">
+
+                            <input id="@inputId"
+                                   type="radio"
+                                   name="selections[@question.Id]"
+                                   value="@choice.Id"
+                                   required />
+
+                            <span>
+                                @choice.Text
+                            </span>
+                        </label>
+                    }
+                </div>
+            </fieldset>
+        }
+
+        <div class="actions">
+            <button class="btn"
+                    type="submit">
+                Nộp bài và xem kết quả
+            </button>
+        </div>
+    </form>
+</div>
