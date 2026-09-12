@@ -1,4 +1,5 @@
 using EnglishLearning.Domain.Entities;
+using EnglishLearning.Domain.Enums;
 using EnglishLearning.Infrastructure.Data;
 using EnglishLearning.Infrastructure.Identity;
 using EnglishLearning.Web.ViewModels;
@@ -448,6 +449,40 @@ public class AdminController(
 
             case Vocabulary vocabulary:
                 {
+                    vocabulary.Word =
+                        vocabulary.Word?.Trim() ??
+                        string.Empty;
+
+                    vocabulary.MeaningVi =
+                        vocabulary.MeaningVi?.Trim() ??
+                        string.Empty;
+
+                    vocabulary.Cefr =
+                        vocabulary.Cefr?
+                            .Trim()
+                            .ToUpperInvariant() ??
+                        string.Empty;
+
+                    if (!Enum.IsDefined(vocabulary.Level))
+                    {
+                        ModelState.AddModelError(
+                            nameof(Vocabulary.Level),
+                            "Nhóm từ vựng không hợp lệ.");
+                    }
+
+                    bool duplicateWord =
+                        await db.Vocabularies.AnyAsync(existing =>
+                            existing.Id != vocabulary.Id &&
+                            existing.TopicId == vocabulary.TopicId &&
+                            existing.Word == vocabulary.Word);
+
+                    if (duplicateWord)
+                    {
+                        ModelState.AddModelError(
+                            nameof(Vocabulary.Word),
+                            "Từ này đã tồn tại trong cùng chủ đề.");
+                    }
+
                     Topic? topic = null;
 
                     if (vocabulary.TopicId.HasValue)
@@ -474,34 +509,44 @@ public class AdminController(
 
                     if (vocabulary.TopicSourceId.HasValue)
                     {
-                        var sourceMatchesTopic =
-                            await db.TopicSources.AnyAsync(
-                                source =>
-                                    source.Id ==
-                                    vocabulary.TopicSourceId &&
-                                    source.TopicId ==
-                                    vocabulary.TopicId);
-
-                        if (!sourceMatchesTopic)
+                        if (!vocabulary.TopicId.HasValue)
                         {
                             ModelState.AddModelError(
                                 nameof(Vocabulary.TopicSourceId),
-                                "Nguồn phải thuộc đúng chủ đề đã chọn.");
+                                "Phải chọn chủ đề trước khi chọn nguồn.");
+                        }
+                        else
+                        {
+                            bool sourceMatchesTopic =
+                                await db.TopicSources.AnyAsync(source =>
+                                    source.Id ==
+                                    vocabulary.TopicSourceId.Value &&
+                                    source.TopicId ==
+                                    vocabulary.TopicId.Value);
+
+                            if (!sourceMatchesTopic)
+                            {
+                                ModelState.AddModelError(
+                                    nameof(Vocabulary.TopicSourceId),
+                                    "Nguồn phải thuộc đúng chủ đề đã chọn.");
+                            }
                         }
                     }
 
                     string[] cefrLevels =
                     [
                         "A1",
-                    "A2",
-                    "B1",
-                    "B2",
-                    "C1",
-                    "C2"
+        "A2",
+        "B1",
+        "B2",
+        "C1",
+        "C2"
                     ];
 
-                    if (!string.IsNullOrWhiteSpace(vocabulary.Cefr) &&
-                        !cefrLevels.Contains(vocabulary.Cefr))
+                    if (!string.IsNullOrWhiteSpace(
+                            vocabulary.Cefr) &&
+                        !cefrLevels.Contains(
+                            vocabulary.Cefr))
                     {
                         ModelState.AddModelError(
                             nameof(Vocabulary.Cefr),
@@ -1105,16 +1150,25 @@ public class AdminController(
 
     [HttpGet]
     public async Task<IActionResult> Vocabularies(
-      string? search,
-      int? gradeId,
-      int? topicId,
-      string? cefr,
-      int page = 1)
+     string? search,
+     int? gradeId,
+     int? topicId,
+     string? cefr,
+     string? level,
+     int page = 1)
     {
         const int pageSize = 20;
 
         search = search?.Trim() ?? string.Empty;
-        cefr = cefr?.Trim().ToUpperInvariant() ?? string.Empty;
+
+        cefr = cefr?
+            .Trim()
+            .ToUpperInvariant() ?? string.Empty;
+
+        level = level?
+            .Trim()
+            .ToLowerInvariant() ?? string.Empty;
+
         page = Math.Max(page, 1);
 
         string[] allowedCefr =
@@ -1131,6 +1185,18 @@ public class AdminController(
         if (!allowedCefr.Contains(cefr))
         {
             cefr = string.Empty;
+        }
+
+        string[] allowedLevels =
+        [
+            "",
+        "core",
+        "advanced"
+        ];
+
+        if (!allowedLevels.Contains(level))
+        {
+            level = string.Empty;
         }
 
         var query = db.Vocabularies
@@ -1165,7 +1231,22 @@ public class AdminController(
                 vocabulary.Cefr == cefr);
         }
 
-        int totalItems = await query.CountAsync();
+        if (level == "core")
+        {
+            query = query.Where(vocabulary =>
+                vocabulary.Level ==
+                VocabularyLevel.Core);
+        }
+
+        if (level == "advanced")
+        {
+            query = query.Where(vocabulary =>
+                vocabulary.Level ==
+                VocabularyLevel.Advanced);
+        }
+
+        int totalItems =
+            await query.CountAsync();
 
         int totalPages = Math.Max(
             1,
@@ -1178,7 +1259,8 @@ public class AdminController(
         }
 
         var items = await query
-            .OrderBy(vocabulary => vocabulary.Word)
+            .OrderBy(vocabulary =>
+                vocabulary.Word)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(vocabulary =>
@@ -1188,10 +1270,13 @@ public class AdminController(
                     TopicId = vocabulary.TopicId,
                     Word = vocabulary.Word,
                     MeaningVi = vocabulary.MeaningVi,
-                    PartOfSpeech = vocabulary.PartOfSpeech,
+                    PartOfSpeech =
+                        vocabulary.PartOfSpeech,
                     Cefr = vocabulary.Cefr,
+                    Level = vocabulary.Level,
 
-                    GradeName = vocabulary.TopicId.HasValue
+                    GradeName =
+                        vocabulary.TopicId.HasValue
                         ? db.Topics
                             .Where(topic =>
                                 topic.Id ==
@@ -1201,49 +1286,58 @@ public class AdminController(
                             .FirstOrDefault() ?? "—"
                         : "Từ vựng chung",
 
-                    TopicName = vocabulary.TopicId.HasValue
+                    TopicName =
+                        vocabulary.TopicId.HasValue
                         ? db.Topics
                             .Where(topic =>
                                 topic.Id ==
                                 vocabulary.TopicId.Value)
-                            .Select(topic => topic.Name)
+                            .Select(topic =>
+                                topic.Name)
                             .FirstOrDefault() ?? "—"
                         : "Từ vựng chung",
 
-                    SourceName = vocabulary.TopicSourceId.HasValue
+                    SourceName =
+                        vocabulary.TopicSourceId.HasValue
                         ? db.TopicSources
                             .Where(source =>
                                 source.Id ==
                                 vocabulary.TopicSourceId.Value)
-                            .Select(source => source.Textbook)
+                            .Select(source =>
+                                source.Textbook)
                             .FirstOrDefault() ?? "—"
                         : "—",
 
-                    Unit = vocabulary.TopicSourceId.HasValue
+                    Unit =
+                        vocabulary.TopicSourceId.HasValue
                         ? db.TopicSources
                             .Where(source =>
                                 source.Id ==
                                 vocabulary.TopicSourceId.Value)
-                            .Select(source => source.Unit)
+                            .Select(source =>
+                                source.Unit)
                             .FirstOrDefault() ?? "—"
                         : "—",
 
                     ExampleCount =
-                        db.VocabularyExamples.Count(example =>
-                            example.VocabularyId ==
-                            vocabulary.Id),
+                        db.VocabularyExamples.Count(
+                            example =>
+                                example.VocabularyId ==
+                                vocabulary.Id),
 
                     AudioCount =
-                        db.VocabularyAudios.Count(audio =>
-                            audio.VocabularyId ==
-                            vocabulary.Id)
+                        db.VocabularyAudios.Count(
+                            audio =>
+                                audio.VocabularyId ==
+                                vocabulary.Id)
                 })
             .ToListAsync();
 
         ViewBag.Grades = new SelectList(
             await db.Grades
                 .AsNoTracking()
-                .OrderBy(grade => grade.Number)
+                .OrderBy(grade =>
+                    grade.Number)
                 .ToListAsync(),
             "Id",
             "Name",
@@ -1255,22 +1349,30 @@ public class AdminController(
 
         if (gradeId.HasValue)
         {
-            topicFilterQuery = topicFilterQuery.Where(topic =>
-                topic.GradeId == gradeId.Value);
+            topicFilterQuery =
+                topicFilterQuery.Where(topic =>
+                    topic.GradeId ==
+                    gradeId.Value);
         }
 
-        var topicOptions = await topicFilterQuery
-            .OrderBy(topic => topic.Grade!.Number)
-            .ThenBy(topic => topic.SortOrder)
-            .ThenBy(topic => topic.Name)
-            .Select(topic => new
-            {
-                topic.Id,
-                Label = topic.Grade!.Name +
+        var topicOptions =
+            await topicFilterQuery
+                .OrderBy(topic =>
+                    topic.Grade!.Number)
+                .ThenBy(topic =>
+                    topic.SortOrder)
+                .ThenBy(topic =>
+                    topic.Name)
+                .Select(topic => new
+                {
+                    topic.Id,
+
+                    Label =
+                        topic.Grade!.Name +
                         " / " +
                         topic.Name
-            })
-            .ToListAsync();
+                })
+                .ToListAsync();
 
         ViewBag.TopicFilters = new SelectList(
             topicOptions,
@@ -1278,17 +1380,19 @@ public class AdminController(
             "Label",
             topicId);
 
-        var model = new VocabularyListViewModel
-        {
-            Items = items,
-            Search = search,
-            GradeId = gradeId,
-            TopicId = topicId,
-            Cefr = cefr,
-            CurrentPage = page,
-            TotalPages = totalPages,
-            TotalItems = totalItems
-        };
+        var model =
+            new VocabularyListViewModel
+            {
+                Items = items,
+                Search = search,
+                GradeId = gradeId,
+                TopicId = topicId,
+                Cefr = cefr,
+                Level = level,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalItems = totalItems
+            };
 
         return View(model);
     }
@@ -1311,12 +1415,13 @@ public class AdminController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditVocabulary(
-        [Bind(
-            "Id,TopicId,TopicSourceId,Word,MeaningVi," +
-            "PartOfSpeech,UkPhonetic,UsPhonetic,Cefr," +
-            "RelatedWords,WordFamily")]
-        Vocabulary input)
+     [Bind(
+        "Id,TopicId,TopicSourceId,Word,MeaningVi," +
+        "PartOfSpeech,UkPhonetic,UsPhonetic,Cefr," +
+        "RelatedWords,WordFamily,Level")]
+    Vocabulary input)
     {
         await ValidateContent(input);
 
@@ -1353,13 +1458,15 @@ public class AdminController(
         catch (DbUpdateException)
         {
             return await SaveError(
-                "Không thể lưu từ vựng.",
+                "Không thể lưu từ vựng. Từ có thể đã tồn tại trong chủ đề này.",
                 input);
         }
 
-        TempData["Message"] = "Đã lưu từ vựng.";
+        TempData["Message"] =
+            "Đã lưu từ vựng.";
 
-        return RedirectToAction(nameof(Vocabularies));
+        return RedirectToAction(
+            nameof(Vocabularies));
     }
 
     [Authorize(Roles = "Admin")]

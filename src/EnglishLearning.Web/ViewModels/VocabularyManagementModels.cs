@@ -1,4 +1,6 @@
-﻿namespace EnglishLearning.Web.ViewModels;
+﻿using EnglishLearning.Domain.Enums;
+
+namespace EnglishLearning.Web.ViewModels;
 
 public class VocabularyListItemViewModel
 {
@@ -30,6 +32,9 @@ public class VocabularyListItemViewModel
     public string Cefr { get; set; } =
         string.Empty;
 
+    public VocabularyLevel Level { get; set; } =
+        VocabularyLevel.Core;
+
     public int ExampleCount { get; set; }
 
     public int AudioCount { get; set; }
@@ -48,6 +53,9 @@ public class VocabularyListViewModel
     public int? TopicId { get; set; }
 
     public string Cefr { get; set; } =
+        string.Empty;
+
+    public string Level { get; set; } =
         string.Empty;
 
     public int CurrentPage { get; set; }

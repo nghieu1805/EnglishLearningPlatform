@@ -1,13 +1,212 @@
-@model Vocabulary
-@{ViewData["Title"]="Chỉnh sửa Từ vựng";}
-<partial name="_AdminNav"/><h1>Chỉnh sửa Từ vựng</h1><form class="editor" asp-action="EditVocabulary" method="post"><div asp-validation-summary="All" role="alert"></div><input type="hidden" asp-for="Id"/><div><label asp-for="TopicId">Chủ đề (để trống cho từ điển độc lập)</label><select asp-for="TopicId" asp-items="ViewBag.Topics"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="TopicId"></span></div>
-<div><label asp-for="TopicSourceId">Nguồn chủ đề (bắt buộc cho bài học chính thức)</label><select asp-for="TopicSourceId" asp-items="ViewBag.Sources"><option value="">— Chọn / Để trống —</option></select><span asp-validation-for="TopicSourceId"></span></div>
-<div><label asp-for="Word">Từ tiếng Anh</label><input asp-for="Word" type="text"/><span asp-validation-for="Word"></span></div>
-<div><label asp-for="MeaningVi">Nghĩa tiếng Việt</label><textarea asp-for="MeaningVi"></textarea><span asp-validation-for="MeaningVi"></span></div>
-<div><label asp-for="PartOfSpeech">Loại từ</label><input asp-for="PartOfSpeech" type="text"/><span asp-validation-for="PartOfSpeech"></span></div>
-<div><label asp-for="UkPhonetic">Phiên âm UK</label><input asp-for="UkPhonetic" type="text"/><span asp-validation-for="UkPhonetic"></span></div>
-<div><label asp-for="UsPhonetic">Phiên âm US</label><input asp-for="UsPhonetic" type="text"/><span asp-validation-for="UsPhonetic"></span></div>
-<div><label asp-for="Cefr">CEFR (để trống nếu chưa xác minh)</label><input asp-for="Cefr" type="text"/><span asp-validation-for="Cefr"></span></div>
-<div><label asp-for="RelatedWords">Từ liên quan</label><input asp-for="RelatedWords" type="text"/><span asp-validation-for="RelatedWords"></span></div>
-<div><label asp-for="WordFamily">Họ từ</label><input asp-for="WordFamily" type="text"/><span asp-validation-for="WordFamily"></span></div>
-<div class="actions"><button class="btn">Lưu</button><a asp-action="Vocabularies">Quay lại</a></div></form>
+@model EnglishLearning.Domain.Entities.Vocabulary
+
+@{
+    ViewData["Title"] = Model.Id == 0
+        ? "Thêm từ vựng"
+        : "Chỉnh sửa từ vựng";
+}
+
+<partial name="_AdminNav" />
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">VOCABULARY EDITOR</p>
+
+        <h1>
+            @(Model.Id == 0
+                        ? "Thêm từ vựng"
+                        : "Chỉnh sửa từ vựng")
+        </h1>
+    </div>
+</div>
+
+<form class="editor"
+      asp-controller="Admin"
+      asp-action="EditVocabulary"
+      method="post"
+      asp-antiforgery="true">
+
+    <div asp-validation-summary="All"
+         role="alert"
+         class="validation-summary">
+    </div>
+
+    <input type="hidden"
+           asp-for="Id" />
+
+    <div>
+        <label asp-for="TopicId">
+            Chủ đề
+        </label>
+
+        <select asp-for="TopicId"
+                asp-items="ViewBag.Topics">
+            <option value="">
+                — Để trống cho từ điển độc lập —
+            </option>
+        </select>
+
+        <span asp-validation-for="TopicId"></span>
+    </div>
+
+    <div>
+        <label asp-for="TopicSourceId">
+            Nguồn SGK và Unit
+        </label>
+
+        <select asp-for="TopicSourceId"
+                asp-items="ViewBag.Sources">
+            <option value="">
+                — Chọn nguồn / Để trống —
+            </option>
+        </select>
+
+        <span asp-validation-for="TopicSourceId"></span>
+
+        <small>
+            Bắt buộc đối với từ thuộc chủ đề chính thức.
+        </small>
+    </div>
+
+    <div>
+        <label asp-for="Level">
+            Nhóm từ vựng
+        </label>
+
+        <select asp-for="Level">
+            <option value="Core">
+                Core Vocabulary — Từ vựng cốt lõi
+            </option>
+
+            <option value="Advanced">
+                Advanced Vocabulary — Từ vựng nâng cao
+            </option>
+        </select>
+
+        <span asp-validation-for="Level"></span>
+    </div>
+
+    <div>
+        <label asp-for="Word">
+            Từ tiếng Anh
+        </label>
+
+        <input asp-for="Word"
+               type="text"
+               maxlength="100"
+               autocomplete="off" />
+
+        <span asp-validation-for="Word"></span>
+    </div>
+
+    <div>
+        <label asp-for="MeaningVi">
+            Nghĩa tiếng Việt
+        </label>
+
+        <textarea asp-for="MeaningVi"
+                  maxlength="500"
+                  rows="3">
+        </textarea>
+
+        <span asp-validation-for="MeaningVi"></span>
+    </div>
+
+    <div>
+        <label asp-for="PartOfSpeech">
+            Loại từ
+        </label>
+
+        <input asp-for="PartOfSpeech"
+               type="text"
+               maxlength="50"
+               placeholder="noun, verb, adjective..." />
+
+        <span asp-validation-for="PartOfSpeech"></span>
+    </div>
+
+    <div>
+        <label asp-for="UkPhonetic">
+            Phiên âm UK
+        </label>
+
+        <input asp-for="UkPhonetic"
+               type="text"
+               maxlength="100"
+               placeholder="/.../" />
+
+        <span asp-validation-for="UkPhonetic"></span>
+    </div>
+
+    <div>
+        <label asp-for="UsPhonetic">
+            Phiên âm US
+        </label>
+
+        <input asp-for="UsPhonetic"
+               type="text"
+               maxlength="100"
+               placeholder="/.../" />
+
+        <span asp-validation-for="UsPhonetic"></span>
+    </div>
+
+    <div>
+        <label asp-for="Cefr">
+            CEFR
+        </label>
+
+        <select asp-for="Cefr">
+            <option value="">
+                — Chưa xác minh —
+            </option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+        </select>
+
+        <span asp-validation-for="Cefr"></span>
+    </div>
+
+    <div>
+        <label asp-for="RelatedWords">
+            Từ liên quan
+        </label>
+
+        <input asp-for="RelatedWords"
+               type="text"
+               maxlength="500"
+               placeholder="school, classroom, study..." />
+
+        <span asp-validation-for="RelatedWords"></span>
+    </div>
+
+    <div>
+        <label asp-for="WordFamily">
+            Họ từ
+        </label>
+
+        <input asp-for="WordFamily"
+               type="text"
+               maxlength="500"
+               placeholder="teach, teacher, teaching..." />
+
+        <span asp-validation-for="WordFamily"></span>
+    </div>
+
+    <div class="actions">
+        <button class="btn"
+                type="submit">
+            Lưu từ vựng
+        </button>
+
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="Vocabularies">
+            Quay lại
+        </a>
+    </div>
+</form>

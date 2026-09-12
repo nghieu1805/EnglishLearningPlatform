@@ -1,3 +1,4 @@
+@using EnglishLearning.Domain.Enums
 @model EnglishLearning.Web.ViewModels.VocabularyListViewModel
 
 @{
@@ -16,8 +17,12 @@
 
 <div class="section-heading">
     <div>
-        <p class="eyebrow">VOCABULARY MANAGEMENT</p>
+        <p class="eyebrow">
+            VOCABULARY MANAGEMENT
+        </p>
+
         <h1>Quản lý từ vựng</h1>
+
         <p>@Model.TotalItems từ vựng</p>
     </div>
 
@@ -28,6 +33,7 @@
         + Thêm từ vựng
     </a>
 </div>
+
 <form asp-controller="Admin"
       asp-action="Vocabularies"
       method="get"
@@ -53,7 +59,9 @@
         <select id="gradeId"
                 name="gradeId"
                 asp-items="ViewBag.Grades">
-            <option value="">Tất cả lớp</option>
+            <option value="">
+                Tất cả lớp
+            </option>
         </select>
     </div>
 
@@ -65,7 +73,9 @@
         <select id="topicId"
                 name="topicId"
                 asp-items="ViewBag.TopicFilters">
-            <option value="">Tất cả chủ đề</option>
+            <option value="">
+                Tất cả chủ đề
+            </option>
         </select>
     </div>
 
@@ -114,6 +124,31 @@
         </select>
     </div>
 
+    <div>
+        <label for="level">
+            Nhóm từ vựng
+        </label>
+
+        <select id="level"
+                name="level">
+
+            <option value=""
+                    selected="@(string.IsNullOrEmpty(Model.Level) ? "selected" : null)">
+                Tất cả nhóm
+            </option>
+
+            <option value="core"
+                    selected="@(Model.Level == "core" ? "selected" : null)">
+                Core Vocabulary
+            </option>
+
+            <option value="advanced"
+                    selected="@(Model.Level == "advanced" ? "selected" : null)">
+                Advanced Vocabulary
+            </option>
+        </select>
+    </div>
+
     <div class="actions">
         <button class="btn"
                 type="submit">
@@ -144,6 +179,7 @@ else
                     <th>Nghĩa</th>
                     <th>Lớp/Chủ đề</th>
                     <th>Nguồn SGK</th>
+                    <th>Nhóm</th>
                     <th>CEFR</th>
                     <th>Ví dụ</th>
                     <th>Audio</th>
@@ -197,6 +233,22 @@ else
                                 <small>
                                     @vocabulary.Unit
                                 </small>
+                            }
+                        </td>
+
+                        <td>
+                            @if (vocabulary.Level ==
+                                                VocabularyLevel.Advanced)
+                            {
+                                <span class="tag">
+                                    Advanced
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="tag">
+                                    Core
+                                </span>
                             }
                         </td>
 
@@ -272,6 +324,7 @@ else
                asp-route-gradeId="@Model.GradeId"
                asp-route-topicId="@Model.TopicId"
                asp-route-cefr="@Model.Cefr"
+               asp-route-level="@Model.Level"
                asp-route-page="@(Model.CurrentPage - 1)">
                 ← Trang trước
             </a>
@@ -290,6 +343,7 @@ else
                asp-route-gradeId="@Model.GradeId"
                asp-route-topicId="@Model.TopicId"
                asp-route-cefr="@Model.Cefr"
+               asp-route-level="@Model.Level"
                asp-route-page="@(Model.CurrentPage + 1)">
                 Trang sau →
             </a>
