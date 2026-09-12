@@ -1104,13 +1104,193 @@ public class AdminController(
     // =====================================================
 
     [HttpGet]
-    public async Task<IActionResult> Vocabularies()
+    public async Task<IActionResult> Vocabularies(
+      string? search,
+      int? gradeId,
+      int? topicId,
+      string? cefr,
+      int page = 1)
     {
-        return View(
-            await db.Vocabularies
+        const int pageSize = 20;
+
+        search = search?.Trim() ?? string.Empty;
+        cefr = cefr?.Trim().ToUpperInvariant() ?? string.Empty;
+        page = Math.Max(page, 1);
+
+        string[] allowedCefr =
+        [
+            "",
+        "A1",
+        "A2",
+        "B1",
+        "B2",
+        "C1",
+        "C2"
+        ];
+
+        if (!allowedCefr.Contains(cefr))
+        {
+            cefr = string.Empty;
+        }
+
+        var query = db.Vocabularies
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(vocabulary =>
+                vocabulary.Word.Contains(search) ||
+                vocabulary.MeaningVi.Contains(search));
+        }
+
+        if (gradeId.HasValue)
+        {
+            query = query.Where(vocabulary =>
+                vocabulary.TopicId.HasValue &&
+                db.Topics.Any(topic =>
+                    topic.Id == vocabulary.TopicId.Value &&
+                    topic.GradeId == gradeId.Value));
+        }
+
+        if (topicId.HasValue)
+        {
+            query = query.Where(vocabulary =>
+                vocabulary.TopicId == topicId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(cefr))
+        {
+            query = query.Where(vocabulary =>
+                vocabulary.Cefr == cefr);
+        }
+
+        int totalItems = await query.CountAsync();
+
+        int totalPages = Math.Max(
+            1,
+            (int)Math.Ceiling(
+                totalItems / (double)pageSize));
+
+        if (page > totalPages)
+        {
+            page = totalPages;
+        }
+
+        var items = await query
+            .OrderBy(vocabulary => vocabulary.Word)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(vocabulary =>
+                new VocabularyListItemViewModel
+                {
+                    Id = vocabulary.Id,
+                    TopicId = vocabulary.TopicId,
+                    Word = vocabulary.Word,
+                    MeaningVi = vocabulary.MeaningVi,
+                    PartOfSpeech = vocabulary.PartOfSpeech,
+                    Cefr = vocabulary.Cefr,
+
+                    GradeName = vocabulary.TopicId.HasValue
+                        ? db.Topics
+                            .Where(topic =>
+                                topic.Id ==
+                                vocabulary.TopicId.Value)
+                            .Select(topic =>
+                                topic.Grade!.Name)
+                            .FirstOrDefault() ?? "—"
+                        : "Từ vựng chung",
+
+                    TopicName = vocabulary.TopicId.HasValue
+                        ? db.Topics
+                            .Where(topic =>
+                                topic.Id ==
+                                vocabulary.TopicId.Value)
+                            .Select(topic => topic.Name)
+                            .FirstOrDefault() ?? "—"
+                        : "Từ vựng chung",
+
+                    SourceName = vocabulary.TopicSourceId.HasValue
+                        ? db.TopicSources
+                            .Where(source =>
+                                source.Id ==
+                                vocabulary.TopicSourceId.Value)
+                            .Select(source => source.Textbook)
+                            .FirstOrDefault() ?? "—"
+                        : "—",
+
+                    Unit = vocabulary.TopicSourceId.HasValue
+                        ? db.TopicSources
+                            .Where(source =>
+                                source.Id ==
+                                vocabulary.TopicSourceId.Value)
+                            .Select(source => source.Unit)
+                            .FirstOrDefault() ?? "—"
+                        : "—",
+
+                    ExampleCount =
+                        db.VocabularyExamples.Count(example =>
+                            example.VocabularyId ==
+                            vocabulary.Id),
+
+                    AudioCount =
+                        db.VocabularyAudios.Count(audio =>
+                            audio.VocabularyId ==
+                            vocabulary.Id)
+                })
+            .ToListAsync();
+
+        ViewBag.Grades = new SelectList(
+            await db.Grades
                 .AsNoTracking()
-                .OrderBy(vocabulary => vocabulary.Word)
-                .ToListAsync());
+                .OrderBy(grade => grade.Number)
+                .ToListAsync(),
+            "Id",
+            "Name",
+            gradeId);
+
+        var topicFilterQuery = db.Topics
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (gradeId.HasValue)
+        {
+            topicFilterQuery = topicFilterQuery.Where(topic =>
+                topic.GradeId == gradeId.Value);
+        }
+
+        var topicOptions = await topicFilterQuery
+            .OrderBy(topic => topic.Grade!.Number)
+            .ThenBy(topic => topic.SortOrder)
+            .ThenBy(topic => topic.Name)
+            .Select(topic => new
+            {
+                topic.Id,
+                Label = topic.Grade!.Name +
+                        " / " +
+                        topic.Name
+            })
+            .ToListAsync();
+
+        ViewBag.TopicFilters = new SelectList(
+            topicOptions,
+            "Id",
+            "Label",
+            topicId);
+
+        var model = new VocabularyListViewModel
+        {
+            Items = items,
+            Search = search,
+            GradeId = gradeId,
+            TopicId = topicId,
+            Cefr = cefr,
+            CurrentPage = page,
+            TotalPages = totalPages,
+            TotalItems = totalItems
+        };
+
+        return View(model);
     }
 
     [HttpGet]

@@ -1,5 +1,298 @@
-@model List<Vocabulary>
-@{ViewData["Title"]="Từ vựng";}
-<partial name="_AdminNav"/><h1>Từ vựng</h1><p><a class="btn" asp-action="EditVocabulary">Thêm mới</a></p>
-<div class="table-wrap"><table><thead><tr><th>ID</th><th>Chủ đề (để trống cho từ điển độc lập)</th><th>Nguồn chủ đề (bắt buộc cho bài học chính thức)</th><th>Từ tiếng Anh</th><th>Nghĩa tiếng Việt</th><th>Thao tác</th></tr></thead><tbody>@foreach(var item in Model){<tr><td>@item.Id</td><td>@item.TopicId</td><td>@item.TopicSourceId</td><td>@item.Word</td><td>@item.MeaningVi</td><td><a asp-action="EditVocabulary" asp-route-id="@item.Id">Sửa</a> <form method="post" asp-action="DeleteVocabulary" data-confirm="Xoá bản ghi này và dữ liệu phụ thuộc (nếu có)?"><input type="hidden" name="id" value="@item.Id"/><button class="btn secondary">Xoá</button></form></td></tr>}</tbody></table></div>
-@if(Model.Count==0){<p>Chưa có dữ liệu.</p>}
+@model EnglishLearning.Web.ViewModels.VocabularyListViewModel
+
+@{
+    ViewData["Title"] = "Quản lý từ vựng";
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<partial name="_AdminNav" />
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert">
+        @message
+    </div>
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">VOCABULARY MANAGEMENT</p>
+        <h1>Quản lý từ vựng</h1>
+        <p>@Model.TotalItems từ vựng</p>
+    </div>
+
+    <a class="btn"
+       asp-controller="Admin"
+       asp-action="EditVocabulary"
+       asp-route-id="0">
+        + Thêm từ vựng
+    </a>
+</div>
+<form asp-controller="Admin"
+      asp-action="Vocabularies"
+      method="get"
+      class="search">
+
+    <div>
+        <label for="search">
+            Tìm kiếm
+        </label>
+
+        <input id="search"
+               name="search"
+               value="@Model.Search"
+               maxlength="100"
+               placeholder="Từ tiếng Anh hoặc nghĩa tiếng Việt" />
+    </div>
+
+    <div>
+        <label for="gradeId">
+            Lớp
+        </label>
+
+        <select id="gradeId"
+                name="gradeId"
+                asp-items="ViewBag.Grades">
+            <option value="">Tất cả lớp</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="topicId">
+            Chủ đề
+        </label>
+
+        <select id="topicId"
+                name="topicId"
+                asp-items="ViewBag.TopicFilters">
+            <option value="">Tất cả chủ đề</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="cefr">
+            CEFR
+        </label>
+
+        <select id="cefr"
+                name="cefr">
+
+            <option value=""
+                    selected="@(string.IsNullOrEmpty(Model.Cefr) ? "selected" : null)">
+                Tất cả CEFR
+            </option>
+
+            <option value="A1"
+                    selected="@(Model.Cefr == "A1" ? "selected" : null)">
+                A1
+            </option>
+
+            <option value="A2"
+                    selected="@(Model.Cefr == "A2" ? "selected" : null)">
+                A2
+            </option>
+
+            <option value="B1"
+                    selected="@(Model.Cefr == "B1" ? "selected" : null)">
+                B1
+            </option>
+
+            <option value="B2"
+                    selected="@(Model.Cefr == "B2" ? "selected" : null)">
+                B2
+            </option>
+
+            <option value="C1"
+                    selected="@(Model.Cefr == "C1" ? "selected" : null)">
+                C1
+            </option>
+
+            <option value="C2"
+                    selected="@(Model.Cefr == "C2" ? "selected" : null)">
+                C2
+            </option>
+        </select>
+    </div>
+
+    <div class="actions">
+        <button class="btn"
+                type="submit">
+            Lọc dữ liệu
+        </button>
+
+        <a class="btn secondary"
+           asp-controller="Admin"
+           asp-action="Vocabularies">
+            Xoá bộ lọc
+        </a>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="empty">
+        Không tìm thấy từ vựng phù hợp.
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Từ vựng</th>
+                    <th>Nghĩa</th>
+                    <th>Lớp/Chủ đề</th>
+                    <th>Nguồn SGK</th>
+                    <th>CEFR</th>
+                    <th>Ví dụ</th>
+                    <th>Audio</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var vocabulary in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <strong>
+                                @vocabulary.Word
+                            </strong>
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                                vocabulary.PartOfSpeech))
+                            {
+                                <div>
+                                    @vocabulary.PartOfSpeech
+                                </div>
+                            }
+                        </td>
+
+                        <td>
+                            @vocabulary.MeaningVi
+                        </td>
+
+                        <td>
+                            <div>
+                                @vocabulary.GradeName
+                            </div>
+
+                            <strong>
+                                @vocabulary.TopicName
+                            </strong>
+                        </td>
+
+                        <td>
+                            @if (vocabulary.SourceName == "—")
+                            {
+                                <span>—</span>
+                            }
+                            else
+                            {
+                                <div>
+                                    @vocabulary.SourceName
+                                </div>
+
+                                <small>
+                                    @vocabulary.Unit
+                                </small>
+                            }
+                        </td>
+
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(
+                                                vocabulary.Cefr))
+                            {
+                                <span>—</span>
+                            }
+                            else
+                            {
+                                <span class="tag">
+                                    @vocabulary.Cefr
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @vocabulary.ExampleCount
+                        </td>
+
+                        <td>
+                            @vocabulary.AudioCount
+                        </td>
+
+                        <td>
+                            <div class="actions">
+                                <a class="btn"
+                                   asp-controller="Admin"
+                                   asp-action="EditVocabulary"
+                                   asp-route-id="@vocabulary.Id">
+                                    Sửa
+                                </a>
+
+                                @if (isAdmin)
+                                {
+                                    <form asp-controller="Admin"
+                                          asp-action="DeleteVocabulary"
+                                          method="post"
+                                          asp-antiforgery="true">
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@vocabulary.Id" />
+
+                                        <button class="btn secondary"
+                                                type="submit"
+                                                onclick="return confirm('Bạn có chắc muốn xoá từ vựng này?');">
+                                            Xoá
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="actions"
+         aria-label="Phân trang từ vựng">
+
+        @if (Model.CurrentPage > 1)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Vocabularies"
+               asp-route-search="@Model.Search"
+               asp-route-gradeId="@Model.GradeId"
+               asp-route-topicId="@Model.TopicId"
+               asp-route-cefr="@Model.Cefr"
+               asp-route-page="@(Model.CurrentPage - 1)">
+                ← Trang trước
+            </a>
+        }
+
+        <span>
+            Trang @Model.CurrentPage / @Model.TotalPages
+        </span>
+
+        @if (Model.CurrentPage < Model.TotalPages)
+        {
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Vocabularies"
+               asp-route-search="@Model.Search"
+               asp-route-gradeId="@Model.GradeId"
+               asp-route-topicId="@Model.TopicId"
+               asp-route-cefr="@Model.Cefr"
+               asp-route-page="@(Model.CurrentPage + 1)">
+                Trang sau →
+            </a>
+        }
+    </nav>
+}
