@@ -1,11 +1,206 @@
+@using EnglishLearning.Domain.Enums
 @model Vocabulary
-<article class="word-card"><div class="word-heading"><h3>@Model.Word</h3><span class="tag">@Model.PartOfSpeech @Model.Cefr</span></div>
-<p class="meaning">@Model.MeaningVi</p><p class="muted">UK @Model.UkPhonetic · US @Model.UsPhonetic</p>
-@foreach(var audio in Model.Audios){<div><label>@audio.Accent</label><audio controls preload="none" src="@audio.Url">Trình duyệt không hỗ trợ phát âm thanh.</audio></div>}
-@if(Model.Audios.Count==0){<small class="muted">Chưa có bản ghi UK/US.</small><div class="actions"><button type="button" class="btn secondary speak" data-word="@Model.Word" data-lang="en-GB">Đọc bằng giọng máy UK</button><button type="button" class="btn secondary speak" data-word="@Model.Word" data-lang="en-US">Đọc bằng giọng máy US</button></div>}
-@foreach(var e in Model.Examples){<blockquote>@e.Sentence<small>@e.TranslationVi</small></blockquote>}
-@if(!string.IsNullOrWhiteSpace(Model.RelatedWords)){<p>Từ liên quan: @Model.RelatedWords</p>}
-@if(!string.IsNullOrWhiteSpace(Model.WordFamily)){<p>Họ từ: @Model.WordFamily</p>}
-@if(Model.TopicSource!=null){<small>Nguồn: @Model.TopicSource.Textbook · @Model.TopicSource.Unit</small>}
-@if(User.Identity?.IsAuthenticated==true){<form class="actions" asp-controller="Learn" asp-action="Progress" method="post"><input type="hidden" name="vocabularyId" value="@Model.Id"/><input type="hidden" name="returnUrl" value="@(Context.Request.Path.ToString()+Context.Request.QueryString.ToString())"/><label for="status-@Model.Id">Trạng thái</label><select id="status-@Model.Id" name="status"><option value="Learning">Đang học</option><option value="Learned">Đã thuộc</option><option value="NeedsReview">Cần ôn tập</option><option value="New">Mới</option></select><button class="btn">Lưu</button></form>}
+
+@{
+    var statuses =
+        ViewData["VocabularyStatuses"]
+        as IReadOnlyDictionary<int, LearningStatus>;
+
+    LearningStatus currentStatus =
+        LearningStatus.New;
+
+    if (statuses is not null &&
+        statuses.TryGetValue(
+            Model.Id,
+            out var savedStatus))
+    {
+        currentStatus = savedStatus;
+    }
+
+    string statusLabel = currentStatus switch
+    {
+        LearningStatus.Learning => "Đang học",
+        LearningStatus.Learned => "Đã thuộc",
+        LearningStatus.NeedsReview => "Cần ôn tập",
+        _ => "Chưa học"
+    };
+}
+
+<article class="word-card">
+    <div class="word-heading">
+        <div>
+            <h3>@Model.Word</h3>
+
+            <span class="tag">
+                @Model.Level
+            </span>
+        </div>
+
+        <span class="tag">
+            @statusLabel
+        </span>
+    </div>
+
+    <p class="meaning">
+        @Model.MeaningVi
+    </p>
+
+    @if (!string.IsNullOrWhiteSpace(
+        Model.PartOfSpeech) ||
+        !string.IsNullOrWhiteSpace(Model.Cefr))
+    {
+        <p class="muted">
+            @Model.PartOfSpeech
+            @Model.Cefr
+        </p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(
+        Model.UkPhonetic) ||
+        !string.IsNullOrWhiteSpace(Model.UsPhonetic))
+    {
+        <p class="muted">
+            UK @Model.UkPhonetic ·
+            US @Model.UsPhonetic
+        </p>
+    }
+
+    @foreach (var audio in Model.Audios)
+    {
+        <div class="audio-row">
+            <label>@audio.Accent</label>
+
+            <audio controls
+                   preload="none"
+                   src="@audio.Url">
+                Trình duyệt không hỗ trợ âm thanh.
+            </audio>
+        </div>
+    }
+
+    @if (Model.Audios.Count == 0)
+    {
+        <small class="muted">
+            Chưa có bản ghi UK/US.
+        </small>
+
+        <div class="actions">
+            <button type="button"
+                    class="btn secondary speak"
+                    data-word="@Model.Word"
+                    data-lang="en-GB">
+                Đọc bằng giọng máy UK
+            </button>
+
+            <button type="button"
+                    class="btn secondary speak"
+                    data-word="@Model.Word"
+                    data-lang="en-US">
+                Đọc bằng giọng máy US
+            </button>
+        </div>
+    }
+
+    @foreach (var example in Model.Examples)
+    {
+        <blockquote>
+            @example.Sentence
+
+            @if (!string.IsNullOrWhiteSpace(
+                    example.TranslationVi))
+            {
+                <small>
+                    @example.TranslationVi
+                </small>
+            }
+        </blockquote>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(
+        Model.RelatedWords))
+    {
+        <p>
+            Từ liên quan: @Model.RelatedWords
+        </p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(
+        Model.WordFamily))
+    {
+        <p>
+            Họ từ: @Model.WordFamily
+        </p>
+    }
+
+    @if (Model.TopicSource is not null)
+    {
+        <small>
+            Nguồn: @Model.TopicSource.Textbook ·
+            @Model.TopicSource.Unit
+        </small>
+    }
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <form class="actions"
+              asp-controller="Learn"
+              asp-action="Progress"
+              method="post"
+              asp-antiforgery="true">
+
+            <input type="hidden"
+                   name="vocabularyId"
+                   value="@Model.Id" />
+
+            <input type="hidden"
+                   name="returnUrl"
+                   value="@(Context.Request.Path +
+                                               Context.Request.QueryString)" />
+
+        <label for="status-@Model.Id">
+            Trạng thái
+        </label>
+
+            <select id="status-@Model.Id"
+                    name="status">
+
+                <option value="New"
+                        selected="@(currentStatus ==
+                                                LearningStatus.New
+                                                    ? "selected"
+                                                    : null)">
+                Chưa học
+            </option>
+
+                <option value="Learning"
+                        selected="@(currentStatus ==
+                                                LearningStatus.Learning
+                                                    ? "selected"
+                                                    : null)">
+                Đang học
+            </option>
+
+                <option value="Learned"
+                        selected="@(currentStatus ==
+                                                LearningStatus.Learned
+                                                    ? "selected"
+                                                    : null)">
+                Đã thuộc
+            </option>
+
+                <option value="NeedsReview"
+                        selected="@(currentStatus ==
+                                                LearningStatus.NeedsReview
+                                                    ? "selected"
+                                                    : null)">
+                Cần ôn tập
+            </option>
+        </select>
+
+            <button class="btn"
+                    type="submit">
+                Lưu trạng thái
+            </button>
+        </form>
+        }
 </article>
