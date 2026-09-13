@@ -1,0 +1,123 @@
+﻿@{
+    var currentAction =
+        ViewContext.RouteData.Values["action"]?
+            .ToString() ?? string.Empty;
+
+    bool isAdmin = User.IsInRole("Admin");
+    bool isStaff = User.IsInRole("Staff");
+}
+
+@if (isAdmin || isStaff)
+{
+    <nav class="admin-nav"
+         aria-label="Menu quản lý">
+
+        <a asp-controller="Admin"
+           asp-action="Index"
+           class="@(currentAction == "Index" ? "active" : null)">
+            Tổng quan
+        </a>
+
+        @if (isAdmin)
+        {
+            <a asp-controller="Admin"
+               asp-action="Users"
+               class="@(currentAction == "Users" ? "active" : null)">
+                Người dùng
+            </a>
+
+            <a asp-controller="Admin"
+               asp-action="Grades"
+               class="@(currentAction == "Grades" ||
+                                        currentAction == "EditGrade"
+                                  ? "active"
+                                  : null)">
+        Lớp học
+    </a>
+        }
+
+        <a asp-controller="Admin"
+           asp-action="Topics"
+           class="@(currentAction == "Topics" ||
+                                currentAction == "EditTopic"
+                          ? "active"
+                          : null)">
+        Chủ đề
+    </a>
+
+        <a asp-controller="Admin"
+           asp-action="TopicSources"
+           class="@(currentAction == "TopicSources" ||
+                            currentAction == "EditTopicSource"
+                      ? "active"
+                      : null)">
+        Nguồn SGK
+    </a>
+
+        <a asp-controller="Admin"
+           asp-action="Vocabularies"
+           class="@(currentAction == "Vocabularies" ||
+                            currentAction == "EditVocabulary"
+                      ? "active"
+                      : null)">
+        Từ vựng
+    </a>
+
+        <a asp-controller="Admin"
+           asp-action="VocabularyExamples"
+           class="@(currentAction == "VocabularyExamples" ||
+                            currentAction == "EditVocabularyExample"
+                      ? "active"
+                      : null)">
+        Ví dụ
+    </a>
+
+        <a asp-controller="Admin"
+           asp-action="VocabularyAudios"
+           class="@(currentAction == "VocabularyAudios" ||
+                            currentAction == "EditVocabularyAudio"
+                      ? "active"
+                      : null)">
+        Âm thanh
+    </a>
+
+        <a asp-controller="Admin"
+           asp-action="Exercises"
+           class="@(currentAction == "Exercises" ||
+                            currentAction == "EditExercise" ||
+                            currentAction == "QuizDetails"
+                      ? "active"
+                      : null)">
+        Quiz
+    </a>
+
+        <a asp-controller="Admin"
+           asp-action="Questions"
+           class="@(currentAction == "Questions" ||
+                            currentAction == "EditQuestion"
+                      ? "active"
+                      : null)">
+        Câu hỏi
+    </a>
+
+        <a asp-controller="Admin"
+           asp-action="Answers"
+           class="@(currentAction == "Answers" ||
+                            currentAction == "EditAnswer"
+                      ? "active"
+                      : null)">
+        Đáp án
+    </a>
+
+    @if (isAdmin)
+        {
+            <a asp-controller="Admin"
+               asp-action="ImportVocabularies"
+               class="@(currentAction == "ImportVocabularies"
+                                  ? "active"
+                                  : null)">
+        Import CSV
+    </a>
+        }
+    </nav>
+}

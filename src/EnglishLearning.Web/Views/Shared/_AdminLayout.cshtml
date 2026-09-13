@@ -1,0 +1,15 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+<div class="admin-page">
+    <partial name="~/Views/Admin/_AdminNav.cshtml" />
+
+    <main class="admin-content">
+        @RenderBody()
+    </main>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

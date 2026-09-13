@@ -1,0 +1,278 @@
+﻿@model EnglishLearning.Web.ViewModels.VocabularyImportResultViewModel
+
+@{
+    ViewData["Title"] = "Import từ vựng CSV";
+}
+
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert">
+        @message
+    </div>
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">
+            BULK VOCABULARY IMPORT
+        </p>
+
+        <h1>Import từ vựng bằng CSV</h1>
+
+        <p>
+            Kiểm tra dữ liệu trước, sau đó xác nhận Import.
+        </p>
+    </div>
+
+    <a class="btn secondary"
+       asp-controller="Admin"
+       asp-action="Vocabularies">
+        ← Danh sách từ vựng
+    </a>
+</div>
+
+<section class="word-card">
+    <h2>Chọn file CSV</h2>
+
+    <p>
+        File tối đa 5 MB và phải được lưu dưới dạng CSV UTF-8.
+    </p>
+
+    <form asp-controller="Admin"
+          asp-action="ImportVocabularies"
+          method="post"
+          enctype="multipart/form-data"
+          asp-antiforgery="true">
+        <div class="actions">
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="DownloadVocabularyImportTemplate">
+                Tải file CSV mẫu
+            </a>
+
+            <a class="btn secondary"
+               asp-controller="Admin"
+               asp-action="Vocabularies">
+                Danh sách từ vựng
+            </a>
+        </div>
+        <div>
+            <label for="File">
+                File CSV
+            </label>
+
+            <input id="File"
+                   name="File"
+                   type="file"
+                   accept=".csv,text/csv"
+                   required />
+        </div>
+
+        <div class="actions">
+            <button class="btn secondary"
+                    type="submit"
+                    name="Mode"
+                    value="preview">
+                Kiểm tra dữ liệu
+            </button>
+
+            <button class="btn"
+                    type="submit"
+                    name="Mode"
+                    value="import"
+                    onclick="return confirm('Bạn đã kiểm tra file và muốn import toàn bộ dữ liệu hợp lệ?');">
+                Import vào database
+            </button>
+        </div>
+    </form>
+
+    <p>
+        Sau khi xem trước, trình duyệt sẽ xóa lựa chọn file.
+        Bạn cần chọn lại cùng file trước khi nhấn Import.
+    </p>
+</section>
+
+<section class="word-card">
+    <h2>Các cột bắt buộc trong file</h2>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cột</th>
+                    <th>Nội dung</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td>GradeNumber</td>
+                    <td>Số lớp từ 1 đến 12</td>
+                </tr>
+                <tr>
+                    <td>TopicName</td>
+                    <td>Tên chủ đề đã tồn tại</td>
+                </tr>
+                <tr>
+                    <td>Textbook</td>
+                    <td>Tên bộ SGK đã khai báo</td>
+                </tr>
+                <tr>
+                    <td>Unit</td>
+                    <td>Unit thuộc đúng nguồn SGK</td>
+                </tr>
+                <tr>
+                    <td>Level</td>
+                    <td>Core hoặc Advanced</td>
+                </tr>
+                <tr>
+                    <td>Word</td>
+                    <td>Từ tiếng Anh</td>
+                </tr>
+                <tr>
+                    <td>MeaningVi</td>
+                    <td>Nghĩa tiếng Việt</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if (Model.TotalRows > 0)
+{
+    <div class="admin-statistics">
+        <div class="stat-card">
+            <span class="stat-number">
+                @Model.TotalRows
+            </span>
+
+            <span class="stat-label">
+                Tổng số dòng
+            </span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-number">
+                @Model.ValidRows
+            </span>
+
+            <span class="stat-label">
+                Dòng hợp lệ
+            </span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-number">
+                @Model.ErrorRows
+            </span>
+
+            <span class="stat-label">
+                Dòng bị lỗi
+            </span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-number">
+                @Model.ImportedRows
+            </span>
+
+            <span class="stat-label">
+                Đã Import
+            </span>
+        </div>
+    </div>
+
+    @if (Model.WasImported)
+    {
+        <div class="alert">
+            Import thành công @Model.ImportedRows từ vựng.
+        </div>
+    }
+    else if (Model.ErrorRows == 0)
+    {
+        <div class="alert">
+            File hợp lệ. Chọn lại file và nhấn
+            “Import vào database” để xác nhận.
+        </div>
+    }
+    else
+    {
+        <div class="alert">
+            File có lỗi nên chưa có dữ liệu nào được Import.
+        </div>
+    }
+
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">
+                IMPORT RESULT
+            </p>
+
+            <h2>Kết quả kiểm tra</h2>
+
+            @if (!string.IsNullOrWhiteSpace(Model.FileName))
+            {
+                <p>File: @Model.FileName</p>
+            }
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Dòng</th>
+                    <th>Lớp</th>
+                    <th>Chủ đề</th>
+                    <th>Từ</th>
+                    <th>Nghĩa</th>
+                    <th>Nhóm</th>
+                    <th>CEFR</th>
+                    <th>Kết quả</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var row in Model.Rows.Take(200))
+                {
+                    <tr>
+                        <td>@row.RowNumber</td>
+                        <td>@row.Data.GradeNumber</td>
+                        <td>@row.Data.TopicName</td>
+                        <td>@row.Data.Word</td>
+                        <td>@row.Data.MeaningVi</td>
+                        <td>@row.Data.Level</td>
+                        <td>@row.Data.Cefr</td>
+
+                        <td>
+                            @if (row.IsValid)
+                            {
+                                <span class="tag">
+                                    Hợp lệ
+                                </span>
+                            }
+                            else
+                            {
+                                <ul>
+                                    @foreach (var error in row.Errors)
+                                    {
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Rows.Count > 200)
+    {
+        <p>
+            Chỉ hiển thị 200 dòng đầu tiên.
+            Tổng số dòng: @Model.Rows.Count.
+        </p>
+    }
+}

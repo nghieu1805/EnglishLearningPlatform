@@ -8,14 +8,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-
+using EnglishLearning.Web.Services;
+using System.Text;
 
 namespace EnglishLearning.Web.Controllers;
 
 [Authorize(Roles = "Admin,Staff")]
 public class AdminController(
     ApplicationDbContext db,
-    UserManager<ApplicationUser> userManager) : Controller
+    UserManager<ApplicationUser> userManager,
+    VocabularyImportService vocabularyImportService) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -689,6 +691,87 @@ public class AdminController(
         return View(model);
     }
 
+    // =====================================================
+    // VOCABULARY CSV IMPORT — ADMIN ONLY
+    // =====================================================
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public IActionResult ImportVocabularies()
+    {
+        return View(
+            new VocabularyImportResultViewModel());
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    public async Task<IActionResult> ImportVocabularies(
+        VocabularyImportUploadViewModel input,
+        CancellationToken cancellationToken)
+    {
+        string mode =
+            input.Mode?
+                .Trim()
+                .ToLowerInvariant() ??
+            "preview";
+
+        if (mode != "preview" &&
+            mode != "import")
+        {
+            mode = "preview";
+        }
+
+        bool shouldImport =
+            mode == "import";
+
+        try
+        {
+            var result =
+                await vocabularyImportService.ProcessAsync(
+                    input.File,
+                    shouldImport,
+                    cancellationToken);
+
+            if (result.WasImported)
+            {
+                TempData["Message"] =
+                    $"Đã import {result.ImportedRows} từ vựng.";
+            }
+
+            return View(result);
+        }
+        catch (DbUpdateException)
+        {
+            var result =
+                new VocabularyImportResultViewModel
+                {
+                    FileName =
+                        input.File?.FileName ??
+                        string.Empty,
+
+                    TotalRows = 1,
+                    ErrorRows = 1,
+
+                    Rows =
+                    [
+                        new VocabularyImportRowResult
+                    {
+                        RowNumber = 0,
+
+                        Errors =
+                        [
+                            "Không thể import vì dữ liệu " +
+                            "bị trùng hoặc vi phạm ràng buộc."
+                        ]
+                    }
+                    ]
+                };
+
+            return View(result);
+        }
+    }
     // =====================================================
     // GRADES — ADMIN ONLY
     // =====================================================
@@ -2330,11 +2413,25 @@ public class AdminController(
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteAnswer(int id)
     {
-        var entity = await db.Answers.FindAsync(id);
+        var entity =
+            await db.Answers.FindAsync(id);
 
         if (entity is null)
+        {
+            return NotFound();
+        }
+
+        int? exerciseId = await db.Questions
+            .Where(question =>
+                question.Id == entity.QuestionId)
+            .Select(question =>
+                (int?)question.ExerciseId)
+            .FirstOrDefaultAsync();
+
+        if (!exerciseId.HasValue)
         {
             return NotFound();
         }
@@ -2343,7 +2440,12 @@ public class AdminController(
 
         await SaveDeleteChanges();
 
-        return RedirectToAction(nameof(Answers));
+        return RedirectToAction(
+            nameof(QuizDetails),
+            new
+            {
+                id = exerciseId.Value
+            });
     }
 
     // =====================================================
@@ -2363,5 +2465,54 @@ public class AdminController(
             TempData["Message"] =
                 "Không thể xoá vì dữ liệu đang được sử dụng.";
         }
+    }
+    // =====================================================
+    // DOWNLOAD VOCABULARY CSV TEMPLATE — ADMIN ONLY
+    // =====================================================
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public IActionResult DownloadVocabularyImportTemplate()
+    {
+        const string header =
+            "GradeNumber,TopicName,Textbook,Unit,Level,Word," +
+            "MeaningVi,PartOfSpeech,UkPhonetic,UsPhonetic," +
+            "Cefr,RelatedWords,WordFamily,Example," +
+            "TranslationVi,UkAudioUrl,UsAudioUrl";
+
+        const string sample =
+            "6,School,Kết nối tri thức,Unit 1,Core,student," +
+            "học sinh,noun,/ˈstjuː.dənt/,/ˈstuː.dənt/," +
+            "A1,school,study,\"I am a student.\"," +
+            "\"Tôi là học sinh.\",,";
+
+        string csv =
+            header +
+            Environment.NewLine +
+            sample +
+            Environment.NewLine;
+
+        byte[] bom = Encoding.UTF8.GetPreamble();
+        byte[] content = Encoding.UTF8.GetBytes(csv);
+        byte[] result = new byte[bom.Length + content.Length];
+
+        Buffer.BlockCopy(
+            bom,
+            0,
+            result,
+            0,
+            bom.Length);
+
+        Buffer.BlockCopy(
+            content,
+            0,
+            result,
+            bom.Length,
+            content.Length);
+
+        return File(
+            result,
+            "text/csv; charset=utf-8",
+            "vocabulary-import-template.csv");
     }
 }
