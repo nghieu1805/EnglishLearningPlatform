@@ -1,20 +1,131 @@
 using EnglishLearning.Application.Interfaces;
-using EnglishLearning.Infrastructure.Data;
 using EnglishLearning.Domain.Enums;
+using EnglishLearning.Infrastructure.Data;
 using EnglishLearning.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+
 namespace EnglishLearning.Web.Controllers;
+
 [Authorize]
-public class DashboardController(ILearningRepository repository,ApplicationDbContext db):Controller
+public class DashboardController(
+    ILearningRepository repository,
+    ApplicationDbContext db) : Controller
 {
- public async Task<IActionResult> Index(){
-  var userId=User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-  var progress=await repository.ProgressAsync(userId);var history=await repository.HistoryAsync(userId);
-  var topics=await db.Topics.AsNoTracking().Where(t=>t.IsPublished).Select(t=>new{t.Id,t.Name,Total=t.Vocabulary.Count}).ToListAsync();
-  var summaries=topics.Select(t=>new TopicSummary(t.Name,t.Total,progress.Count(p=>p.Vocabulary?.TopicId==t.Id&&p.Status==LearningStatus.Learned))).ToList();
-  return View(new DashboardPage(progress,history,summaries));
- }
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        LearningStatus? status)
+    {
+        if (status.HasValue &&
+            !Enum.IsDefined(
+                typeof(LearningStatus),
+                status.Value))
+        {
+            return BadRequest(
+                "Tr?ng thái h?c không h?p l?.");
+        }
+
+        string? userId =
+            User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Challenge();
+        }
+
+        var progress =
+            await repository.ProgressAsync(userId);
+
+        var history =
+            await repository.HistoryAsync(userId);
+
+        var topicData =
+            await db.Topics
+                .AsNoTracking()
+                .Where(topic => topic.IsPublished)
+                .OrderBy(topic =>
+                    topic.Grade!.Number)
+                .ThenBy(topic => topic.SortOrder)
+                .ThenBy(topic => topic.Name)
+                .Select(topic => new
+                {
+                    topic.Id,
+
+                    GradeName =
+                        topic.Grade != null
+                            ? topic.Grade.Name
+                            : string.Empty,
+
+                    topic.Name,
+
+                    Total =
+                        topic.Vocabulary.Count,
+
+                    CoreTotal =
+                        topic.Vocabulary.Count(
+                            vocabulary =>
+                                vocabulary.Level ==
+                                VocabularyLevel.Core),
+
+                    AdvancedTotal =
+                        topic.Vocabulary.Count(
+                            vocabulary =>
+                                vocabulary.Level ==
+                                VocabularyLevel.Advanced)
+                })
+                .Where(topic => topic.Total > 0)
+                .ToListAsync();
+
+        var summaries =
+            topicData.Select(topic =>
+            {
+                var topicProgress =
+                    progress
+                        .Where(item =>
+                            item.Vocabulary?.TopicId ==
+                            topic.Id)
+                        .ToList();
+
+                return new TopicSummary(
+                    topic.Id,
+                    topic.GradeName,
+                    topic.Name,
+                    topic.Total,
+                    topic.CoreTotal,
+                    topic.AdvancedTotal,
+                    topicProgress.Count(item =>
+                        item.Status ==
+                        LearningStatus.New),
+                    topicProgress.Count(item =>
+                        item.Status ==
+                        LearningStatus.Learning),
+                    topicProgress.Count(item =>
+                        item.Status ==
+                        LearningStatus.Learned),
+                    topicProgress.Count(item =>
+                        item.Status ==
+                        LearningStatus.NeedsReview));
+            })
+            .ToList();
+
+        var filteredProgress =
+            status.HasValue
+                ? progress
+                    .Where(item =>
+                        item.Status == status.Value)
+                    .ToList()
+                : progress;
+
+        var model = new DashboardPage(
+            progress,
+            filteredProgress,
+            history,
+            summaries,
+            status);
+
+        return View(model);
+    }
 }

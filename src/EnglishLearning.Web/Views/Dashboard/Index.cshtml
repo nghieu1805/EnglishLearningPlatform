@@ -1,9 +1,330 @@
+@using EnglishLearning.Domain.Enums
 @model DashboardPage
-@{ViewData["Title"]="Tiến độ học tập";var learned=Model.Progress.Count(p=>p.Status==LearningStatus.Learned);var questions=Model.Attempts.Sum(a=>a.Total);}
-<p class="eyebrow">YOUR LEARNING SPACE</p><h1>Tiến bộ từng ngày</h1>
-<div class="stats"><article><strong>@learned</strong><span>Từ đã thuộc</span></article><article><strong>@Model.Progress.Count(p=>p.Status==LearningStatus.NeedsReview)</strong><span>Từ cần ôn</span></article><article><strong>@Model.Topics.Count(t=>t.Total>0&&t.Learned==t.Total)</strong><span>Chủ đề hoàn thành</span></article><article><strong>@(questions==0?0:Math.Round(100.0*Model.Attempts.Sum(a=>a.Correct)/questions))%</strong><span>Độ chính xác (100 bài gần nhất)</span></article></div>
-<h2>Tiến độ theo chủ đề</h2>@foreach(var t in Model.Topics){<div class="word-card"><strong>@t.Name</strong><p>@t.Learned / @t.Total từ đã thuộc</p><progress max="@(Math.Max(1,t.Total))" value="@t.Learned">@t.Learned</progress></div>}
-<h2>Từ vựng của bạn</h2>@if(Model.Progress.Count==0){<p>Hãy học một chủ đề và lưu trạng thái từ đầu tiên.</p>}
-@foreach(var p in Model.Progress){<div class="word-card"><p class="tag">@p.Status</p>@if(p.Vocabulary is not null){<partial name="_Word" model="p.Vocabulary"/>}</div>}
-<h2>Lịch sử quiz</h2>@if(Model.Attempts.Count==0){<p>Chưa có bài quiz nào.</p>}
-@foreach(var a in Model.Attempts){<p><a asp-controller="Quiz" asp-action="Result" asp-route-id="@a.Id">@a.Exercise?.Title · @a.Correct/@a.Total · @a.SubmittedAtUtc.ToString("dd/MM/yyyy HH:mm") UTC</a></p>}
+
+@{
+    ViewData["Title"] = "Tiến độ học tập";
+}
+
+<p class="eyebrow">YOUR LEARNING SPACE</p>
+<h1>Tiến bộ từng ngày</h1>
+
+<p>
+    Theo dõi từ vựng, chủ đề và kết quả quiz
+    của riêng bạn.
+</p>
+
+<div class="stats dashboard-stats">
+    <article>
+        <strong>@Model.LearnedCount</strong>
+        <span>Từ đã thuộc</span>
+    </article>
+
+    <article>
+        <strong>@Model.LearningCount</strong>
+        <span>Từ đang học</span>
+    </article>
+
+    <article>
+        <strong>@Model.NeedsReviewCount</strong>
+        <span>Từ cần ôn</span>
+    </article>
+
+    <article>
+        <strong>@Model.CompletedTopicCount</strong>
+        <span>Chủ đề hoàn thành</span>
+    </article>
+
+    <article>
+        <strong>@Model.Accuracy%</strong>
+        <span>Độ chính xác quiz</span>
+    </article>
+</div>
+
+<section class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">TOPIC PROGRESS</p>
+            <h2>Tiến độ theo chủ đề</h2>
+        </div>
+    </div>
+
+    @if (Model.Topics.Count == 0)
+    {
+        <div class="empty">
+            Chưa có chủ đề nào có từ vựng.
+        </div>
+    }
+    else
+    {
+        <div class="topic-progress-grid">
+            @foreach (var topic in Model.Topics)
+            {
+                <article class="word-card topic-progress-card">
+                    <div class="word-heading">
+                        <div>
+                            <span class="tag">
+                                @topic.GradeName
+                            </span>
+
+                            <h3>@topic.Name</h3>
+                        </div>
+
+                        <strong>
+                            @topic.CompletionPercentage%
+                        </strong>
+                    </div>
+
+                    <p>
+                        @topic.Learned / @topic.Total từ đã thuộc
+                    </p>
+
+                    <progress max="@Math.Max(1, topic.Total)"
+                              value="@topic.Learned">
+                        @topic.Learned
+                    </progress>
+
+                    <div class="topic-progress-details">
+                        <span>Core: @topic.CoreTotal</span>
+                        <span>Advanced: @topic.AdvancedTotal</span>
+                        <span>Đang học: @topic.Learning</span>
+                        <span>Cần ôn: @topic.NeedsReview</span>
+                    </div>
+
+                    <a class="btn secondary"
+                       asp-controller="Learn"
+                       asp-action="Topic"
+                       asp-route-id="@topic.Id">
+                        Tiếp tục học
+                    </a>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+<section class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">YOUR VOCABULARY</p>
+            <h2>Từ vựng của bạn</h2>
+        </div>
+    </div>
+
+    <form asp-action="Index"
+          method="get"
+          class="progress-filter">
+
+        <label for="status">
+            Lọc theo trạng thái
+        </label>
+
+        <select id="status"
+                name="status">
+            <option value=""
+                    selected="@(Model.SelectedStatus is null
+                                            ? "selected"
+                                            : null)">
+                Tất cả
+            </option>
+
+            <option value="New"
+                    selected="@(Model.SelectedStatus ==
+                                            LearningStatus.New
+                                                ? "selected"
+                                                : null)">
+                Chưa học
+            </option>
+
+            <option value="Learning"
+                    selected="@(Model.SelectedStatus ==
+                                            LearningStatus.Learning
+                                                ? "selected"
+                                                : null)">
+                Đang học
+            </option>
+
+            <option value="Learned"
+                    selected="@(Model.SelectedStatus ==
+                                            LearningStatus.Learned
+                                                ? "selected"
+                                                : null)">
+                Đã thuộc
+            </option>
+
+            <option value="NeedsReview"
+                    selected="@(Model.SelectedStatus ==
+                                            LearningStatus.NeedsReview
+                                                ? "selected"
+                                                : null)">
+                Cần ôn tập
+            </option>
+        </select>
+
+        <button class="btn"
+                type="submit">
+            Lọc
+        </button>
+
+        @if (Model.SelectedStatus.HasValue)
+        {
+            <a class="btn secondary"
+               asp-action="Index">
+                Xoá bộ lọc
+            </a>
+        }
+    </form>
+
+    @if (Model.Progress.Count == 0)
+    {
+        <div class="empty">
+            Hãy học một chủ đề và lưu trạng thái
+            cho từ đầu tiên.
+        </div>
+    }
+    else if (Model.FilteredProgress.Count == 0)
+    {
+        <div class="empty">
+            Không có từ vựng phù hợp với trạng thái
+            đã chọn.
+        </div>
+    }
+    else
+    {
+        <div class="progress-vocabulary-list">
+            @foreach (var item
+                    in Model.FilteredProgress)
+            {
+                if (item.Vocabulary is null)
+                {
+                    continue;
+                }
+
+                string statusLabel =
+                item.Status switch
+                {
+                    LearningStatus.Learning =>
+                    "Đang học",
+
+                    LearningStatus.Learned =>
+                    "Đã thuộc",
+
+                    LearningStatus.NeedsReview =>
+                    "Cần ôn tập",
+
+                    _ => "Chưa học"
+                };
+
+                <article class="word-card progress-word">
+                    <div class="word-heading">
+                        <div>
+                            <h3>@item.Vocabulary.Word</h3>
+
+                            <span class="tag">
+                                @item.Vocabulary.Level
+                            </span>
+                        </div>
+
+                        <span class="tag">
+                            @statusLabel
+                        </span>
+                    </div>
+
+                    <p class="meaning">
+                        @item.Vocabulary.MeaningVi
+                    </p>
+
+                    <p class="muted">
+                        Cập nhật:
+                        @item.UpdatedAtUtc.ToString(
+                        "dd/MM/yyyy HH:mm")
+                UTC
+            </p>
+
+            @if (item.Vocabulary.TopicId.HasValue)
+                    {
+                        <a class="btn secondary"
+                           asp-controller="Learn"
+                           asp-action="Topic"
+                           asp-route-id="@item.Vocabulary.TopicId">
+                            Mở chủ đề
+                        </a>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>
+
+<section class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">QUIZ HISTORY</p>
+            <h2>Lịch sử quiz</h2>
+        </div>
+    </div>
+
+    @if (Model.Attempts.Count == 0)
+    {
+        <div class="empty">
+            Chưa có bài quiz nào.
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bài quiz</th>
+                        <th>Kết quả</th>
+                        <th>Điểm</th>
+                        <th>Thời gian</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var attempt
+                                    in Model.Attempts)
+                    {
+                        int percentage =
+                        attempt.Total == 0
+                        ? 0
+                        : (int)Math.Round(
+                        100.0 *
+                        attempt.Correct /
+                        attempt.Total);
+
+                        <tr>
+                            <td>
+                                @attempt.Exercise?.Title
+                            </td>
+
+                            <td>
+                                @attempt.Correct /
+                                @attempt.Total
+                            </td>
+
+                            <td>@percentage%</td>
+
+                            <td>
+                                @attempt.SubmittedAtUtc
+                                .ToString(
+                                "dd/MM/yyyy HH:mm")
+                                UTC
+                            </td>
+
+                            <td>
+                                <a asp-controller="Quiz"
+                                   asp-action="Result"
+                                   asp-route-id="@attempt.Id">
+                                    Xem kết quả
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

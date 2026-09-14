@@ -41,10 +41,55 @@ public record TopicPage(
 
 public record DashboardPage(
     List<UserVocabularyProgress> Progress,
+    List<UserVocabularyProgress> FilteredProgress,
     List<QuizAttempt> Attempts,
-    List<TopicSummary> Topics);
+    List<TopicSummary> Topics,
+    LearningStatus? SelectedStatus)
+{
+    public int LearningCount =>
+        Progress.Count(item =>
+            item.Status == LearningStatus.Learning);
+
+    public int LearnedCount =>
+        Progress.Count(item =>
+            item.Status == LearningStatus.Learned);
+
+    public int NeedsReviewCount =>
+        Progress.Count(item =>
+            item.Status == LearningStatus.NeedsReview);
+
+    public int CompletedTopicCount =>
+        Topics.Count(topic =>
+            topic.Total > 0 &&
+            topic.Learned == topic.Total);
+
+    public int TotalQuestions =>
+        Attempts.Sum(attempt => attempt.Total);
+
+    public int Accuracy =>
+        TotalQuestions == 0
+            ? 0
+            : (int)Math.Round(
+                100.0 *
+                Attempts.Sum(attempt => attempt.Correct) /
+                TotalQuestions);
+}
 
 public record TopicSummary(
+    int Id,
+    string GradeName,
     string Name,
     int Total,
-    int Learned);
+    int CoreTotal,
+    int AdvancedTotal,
+    int New,
+    int Learning,
+    int Learned,
+    int NeedsReview)
+{
+    public int CompletionPercentage =>
+        Total == 0
+            ? 0
+            : (int)Math.Round(
+                100.0 * Learned / Total);
+}
