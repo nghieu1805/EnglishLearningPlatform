@@ -1,5 +1,470 @@
+@using EnglishLearning.Domain.Enums
 @model Topic
-@{ViewData["Title"]="Luyện flashcard";}
-<a asp-action="Topic" asp-route-id="@Model.Id">← @Model.Name</a><h1>Luyện flashcard</h1><p>Đọc từ, tự nhớ nghĩa, rồi mở đáp án để kiểm tra.</p>
-<div class="cards">@foreach(var v in Model.Vocabulary){<article class="word-card"><p class="eyebrow">FLASHCARD</p><h2>@v.Word</h2><details><summary>Hiện nghĩa</summary><p class="meaning">@v.MeaningVi</p></details></article>}</div>
-@if(Model.Vocabulary.Count==0){<p>Chưa có từ vựng để luyện.</p>}
+
+@{
+    ViewData["Title"] = "Luyện flashcard";
+
+    var vocabulary = Model.Vocabulary
+        .OrderBy(word => word.Level)
+        .ThenBy(word => word.Word)
+        .ToList();
+
+    int coreCount = vocabulary.Count(word =>
+        word.Level == VocabularyLevel.Core);
+
+    int advancedCount = vocabulary.Count(word =>
+        word.Level == VocabularyLevel.Advanced);
+}
+
+<a asp-action="Topic"
+   asp-route-id="@Model.Id">
+    ← @Model.Name
+</a>
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow">FLASHCARD PRACTICE</p>
+        <h1>Luyện flashcard</h1>
+
+        <p>
+            Đọc từ, tự nhớ nghĩa, sau đó lật thẻ
+            để kiểm tra.
+        </p>
+    </div>
+</div>
+
+@if (vocabulary.Count == 0)
+{
+    <div class="empty">
+        Chưa có từ vựng để luyện.
+    </div>
+}
+else
+{
+    <section class="flashcard-study"
+             data-flashcard-study>
+
+        <div class="flashcard-filters"
+             aria-label="Lọc nhóm từ vựng">
+
+            <button class="btn flashcard-filter active"
+                    type="button"
+                    data-filter="All">
+                Tất cả (@vocabulary.Count)
+            </button>
+
+            <button class="btn secondary flashcard-filter"
+                    type="button"
+                    data-filter="Core">
+                Core (@coreCount)
+            </button>
+
+            <button class="btn secondary flashcard-filter"
+                    type="button"
+                    data-filter="Advanced">
+                Advanced (@advancedCount)
+            </button>
+        </div>
+
+        <div class="flashcard-counter"
+             aria-live="polite">
+            <strong data-current>1</strong>
+            /
+            <span data-total>@vocabulary.Count</span>
+        </div>
+
+        <div class="flashcard-deck">
+            @for (int index = 0;
+                    index < vocabulary.Count;
+                    index++)
+            {
+                var word = vocabulary[index];
+
+                <article class="flashcard-item"
+                         data-level="@word.Level"
+                         hidden="@(index != 0)">
+
+                    <div class="flashcard"
+                         data-card>
+
+                        <div class="flashcard-inner">
+                            <div class="flashcard-face flashcard-front">
+                                <span class="tag">
+                                    @word.Level
+                                </span>
+
+                                <p class="eyebrow">
+                                    ENGLISH
+                                </p>
+
+                                <h2>@word.Word</h2>
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                                        word.PartOfSpeech))
+                                {
+                                    <p class="muted">
+                                        @word.PartOfSpeech
+                                    </p>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                                        word.Cefr))
+                                {
+                                    <span class="tag">
+                                        CEFR @word.Cefr
+                                    </span>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                                        word.UkPhonetic) ||
+                                                        !string.IsNullOrWhiteSpace(
+                                                        word.UsPhonetic))
+                                {
+                                    <p class="muted">
+                                        UK @word.UkPhonetic
+                                        <br />
+                                        US @word.UsPhonetic
+                                    </p>
+                                }
+
+                                <p class="flashcard-hint">
+                                    Hãy thử nhớ nghĩa trước khi lật thẻ.
+                                </p>
+                            </div>
+
+                            <div class="flashcard-face flashcard-back">
+                                <span class="tag">
+                                    NGHĨA TIẾNG VIỆT
+                                </span>
+
+                                <h2>@word.MeaningVi</h2>
+
+                                @foreach (var example
+                                                        in word.Examples)
+                                {
+                                    <blockquote>
+                                        @example.Sentence
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                                                    example.TranslationVi))
+                                        {
+                                            <small>
+                                                @example.TranslationVi
+                                            </small>
+                                        }
+                                    </blockquote>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                                        word.RelatedWords))
+                                {
+                                    <p>
+                                        <strong>Từ liên quan:</strong>
+                                        @word.RelatedWords
+                                    </p>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                                        word.WordFamily))
+                                {
+                                    <p>
+                                        <strong>Họ từ:</strong>
+                                        @word.WordFamily
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flashcard-actions">
+                        <button class="btn"
+                                type="button"
+                                data-flip
+                                aria-pressed="false">
+                            Hiện nghĩa
+                        </button>
+
+                        <button class="btn secondary flashcard-speak"
+                                type="button"
+                                data-word="@word.Word"
+                                data-language="en-GB">
+                            Phát âm UK
+                        </button>
+
+                        <button class="btn secondary flashcard-speak"
+                                type="button"
+                                data-word="@word.Word"
+                                data-language="en-US">
+                            Phát âm US
+                        </button>
+                    </div>
+
+                    @if (word.Audios.Count > 0)
+                    {
+                        <div class="flashcard-audios">
+                            @foreach (var audio in word.Audios)
+                            {
+                                <div class="audio-row">
+                                    <label>
+                                        Bản ghi @audio.Accent
+                                    </label>
+
+                                    <audio controls
+                                           preload="none"
+                                           src="@audio.Url">
+                                        Trình duyệt không hỗ trợ âm thanh.
+                                    </audio>
+                                </div>
+                            }
+                        </div>
+                    }
+                </article>
+            }
+
+            <div class="empty"
+                 data-filter-empty
+                 hidden>
+                Chưa có từ vựng trong nhóm này.
+            </div>
+        </div>
+
+        <div class="flashcard-navigation">
+            <button class="btn secondary"
+                    type="button"
+                    data-previous>
+                ← Từ trước
+            </button>
+
+            <button class="btn"
+                    type="button"
+                    data-next>
+                Từ tiếp theo →
+            </button>
+        </div>
+    </section>
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const study =
+            document.querySelector("[data-flashcard-study]");
+
+        if (!study) {
+            return;
+        }
+
+        const allCards =
+            Array.from(
+                study.querySelectorAll(".flashcard-item"));
+
+        const filterButtons =
+            Array.from(
+                study.querySelectorAll("[data-filter]"));
+
+        const previousButton =
+            study.querySelector("[data-previous]");
+
+        const nextButton =
+            study.querySelector("[data-next]");
+
+        const currentElement =
+            study.querySelector("[data-current]");
+
+        const totalElement =
+            study.querySelector("[data-total]");
+
+        const emptyElement =
+            study.querySelector("[data-filter-empty]");
+
+        let currentFilter = "All";
+        let currentIndex = 0;
+        let visibleCards = allCards;
+
+        function resetCard(card) {
+            const flashcard =
+                card.querySelector("[data-card]");
+
+            const flipButton =
+                card.querySelector("[data-flip]");
+
+            flashcard?.classList.remove("is-flipped");
+
+            if (flipButton) {
+                flipButton.textContent = "Hiện nghĩa";
+                flipButton.setAttribute(
+                    "aria-pressed",
+                    "false");
+            }
+        }
+
+        function showCurrentCard() {
+            allCards.forEach(function (card) {
+                card.hidden = true;
+                resetCard(card);
+            });
+
+            const hasCards =
+                visibleCards.length > 0;
+
+            emptyElement.hidden = hasCards;
+
+            previousButton.disabled =
+                visibleCards.length <= 1;
+
+            nextButton.disabled =
+                visibleCards.length <= 1;
+
+            if (!hasCards) {
+                currentElement.textContent = "0";
+                totalElement.textContent = "0";
+                return;
+            }
+
+            if (currentIndex >= visibleCards.length) {
+                currentIndex = 0;
+            }
+
+            visibleCards[currentIndex].hidden = false;
+
+            currentElement.textContent =
+                String(currentIndex + 1);
+
+            totalElement.textContent =
+                String(visibleCards.length);
+        }
+
+        function applyFilter(filter) {
+            currentFilter = filter;
+            currentIndex = 0;
+
+            visibleCards = allCards.filter(
+                function (card) {
+                    return currentFilter === "All" ||
+                        card.dataset.level === currentFilter;
+                });
+
+            filterButtons.forEach(function (button) {
+                const isActive =
+                    button.dataset.filter === currentFilter;
+
+                button.classList.toggle(
+                    "active",
+                    isActive);
+
+                button.classList.toggle(
+                    "secondary",
+                    !isActive);
+            });
+
+            showCurrentCard();
+        }
+
+        filterButtons.forEach(function (button) {
+            button.addEventListener(
+                "click",
+                function () {
+                    applyFilter(
+                        button.dataset.filter);
+                });
+        });
+
+        study.addEventListener("click", function (event) {
+            const flipButton =
+                event.target.closest("[data-flip]");
+
+            if (flipButton) {
+                const item =
+                    flipButton.closest(".flashcard-item");
+
+                const flashcard =
+                    item.querySelector("[data-card]");
+
+                const isFlipped =
+                    flashcard.classList.toggle(
+                        "is-flipped");
+
+                flipButton.textContent =
+                    isFlipped
+                        ? "Ẩn nghĩa"
+                        : "Hiện nghĩa";
+
+                flipButton.setAttribute(
+                    "aria-pressed",
+                    String(isFlipped));
+
+                return;
+            }
+
+            const speakButton =
+                event.target.closest(".flashcard-speak");
+
+            if (speakButton) {
+                if (!("speechSynthesis" in window)) {
+                    alert(
+                        "Trình duyệt không hỗ trợ phát âm.");
+                    return;
+                }
+
+                window.speechSynthesis.cancel();
+
+                const utterance =
+                    new SpeechSynthesisUtterance(
+                        speakButton.dataset.word);
+
+                utterance.lang =
+                    speakButton.dataset.language;
+
+                window.speechSynthesis.speak(
+                    utterance);
+            }
+        });
+
+        previousButton.addEventListener(
+            "click",
+            function () {
+                if (visibleCards.length <= 1) {
+                    return;
+                }
+
+                currentIndex =
+                    (currentIndex - 1 +
+                        visibleCards.length) %
+                    visibleCards.length;
+
+                showCurrentCard();
+            });
+
+        nextButton.addEventListener(
+            "click",
+            function () {
+                if (visibleCards.length <= 1) {
+                    return;
+                }
+
+                currentIndex =
+                    (currentIndex + 1) %
+                    visibleCards.length;
+
+                showCurrentCard();
+            });
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+                if (event.target.matches(
+                    "input, select, textarea")) {
+                    return;
+                }
+
+                if (event.key === "ArrowLeft") {
+                    previousButton.click();
+                }
+
+                if (event.key === "ArrowRight") {
+                    nextButton.click();
+                }
+            });
+
+        showCurrentCard();
+    });
+</script>
