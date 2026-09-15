@@ -1,7 +1,397 @@
-@model List<Vocabulary>
-@{ViewData["Title"]="Từ điển";}
-<p class="eyebrow">WORD EXPLORER</p><h1>Tìm một từ mới</h1><p>Tra trong kho từ điển nội bộ, bao gồm từ độc lập ngoài bài học.</p>
-<form method="get" class="search"><label class="visually-hidden" for="q">Từ tiếng Anh</label><input id="q" name="q" maxlength="100" value="@ViewBag.Query" placeholder="Ví dụ: student, sustainability" required/><button class="btn">Tra từ</button></form>
-<p class="muted">Chưa kết nối API bên ngoài. Kết quả phụ thuộc nội dung quản trị viên đã nhập; tối đa 50 từ mỗi lần tìm.</p>
-@if(!string.IsNullOrWhiteSpace((string?)ViewBag.Query)&&Model.Count==0){<p class="empty">Chưa có từ này trong kho dữ liệu.</p>}
-<div class="cards">@foreach(var v in Model){<partial name="_Word" model="v"/>}</div>
+@model DictionaryPage
+
+@{
+    ViewData["Title"] = "Từ điển";
+    ViewData["VocabularyStatuses"] = Model.Statuses;
+}
+
+<p class="eyebrow">WORD EXPLORER</p>
+<h1>Tìm một từ mới</h1>
+
+<p>
+    Hệ thống ưu tiên dữ liệu bài học nội bộ và sử dụng
+    từ điển bên ngoài khi chưa tìm thấy.
+</p>
+
+<form asp-controller="Dictionary"
+      asp-action="Index"
+      method="get"
+      class="search dictionary-search">
+
+    <label class="visually-hidden"
+           for="q">
+        Từ tiếng Anh
+    </label>
+
+    <input id="q"
+           name="q"
+           maxlength="100"
+           value="@Model.Query"
+           placeholder="Ví dụ: student, sustainability"
+           autocomplete="off"
+           required />
+
+    <button class="btn"
+            type="submit">
+        Tra từ
+    </button>
+
+    @if (Model.HasSearched)
+    {
+        <a class="btn secondary"
+           asp-action="Index">
+            Xoá tìm kiếm
+        </a>
+    }
+</form>
+
+@if (!string.IsNullOrWhiteSpace(
+    Model.ErrorMessage))
+{
+    <div class="notice dictionary-error"
+         role="alert">
+        @Model.ErrorMessage
+
+        <p>
+            Bạn có thể thử lại sau hoặc kiểm tra
+            kết nối Internet.
+        </p>
+    </div>
+}
+
+@if (Model.HasInternalResults)
+{
+    <div class="dictionary-summary">
+        <span class="tag">DỮ LIỆU NỘI BỘ</span>
+
+        <p>
+            Tìm thấy
+            <strong>@Model.Results.Count</strong>
+            kết quả cho
+            “<strong>@Model.Query</strong>”.
+        </p>
+    </div>
+
+    <div class="cards dictionary-results">
+        @foreach (var vocabulary in Model.Results)
+        {
+            <div class="dictionary-result">
+                @if (vocabulary.Topic is not null)
+                {
+                    <div class="dictionary-source">
+                        <span class="tag">
+                            @vocabulary.Topic.Grade?.Name
+                        </span>
+
+                        <a asp-controller="Learn"
+                           asp-action="Topic"
+                           asp-route-id="@vocabulary.Topic.Id">
+                            @vocabulary.Topic.Name
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="dictionary-source">
+                        <span class="tag">
+                            Từ điển độc lập
+                        </span>
+                    </div>
+                }
+
+                <partial name="_Word"
+                         model="vocabulary" />
+            </div>
+        }
+    </div>
+}
+else if (Model.HasExternalResults)
+{
+    <div class="dictionary-summary">
+        <span class="tag">EXTERNAL DICTIONARY</span>
+
+        <p>
+            Không có trong kho nội bộ. Đây là kết quả
+            tiếng Anh từ API bên ngoài.
+        </p>
+    </div>
+
+    <div class="external-dictionary-results">
+        @foreach (var entry
+            in Model.ExternalResult!.Entries)
+        {
+            <article class="external-entry">
+                <div class="word-heading">
+                    <div class="actions dictionary-pronunciation">
+                        <button class="btn secondary"
+                                type="button"
+                                data-dictionary-speak
+                                data-word="@entry.Word"
+                                data-language="en-GB">
+                            Đọc giọng UK
+                        </button>
+
+                        <button class="btn secondary"
+                                type="button"
+                                data-dictionary-speak
+                                data-word="@entry.Word"
+                                data-language="en-US">
+                            Đọc giọng US
+                        </button>
+                    </div>
+                    <div>
+                        <h2>@entry.Word</h2>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                                        entry.Phonetic))
+                        {
+                            <span class="phonetic">
+                                /@entry.Phonetic.Trim('/')/
+                            </span>
+                        }
+                    </div>
+
+                    <span class="tag">
+                        API
+                    </span>
+                </div>
+
+                @foreach (var phonetic
+                        in entry.Phonetics
+                        .Where(item =>
+                        !string.IsNullOrWhiteSpace(
+                        item.Text) ||
+                        !string.IsNullOrWhiteSpace(
+                        item.Audio))
+                        .Take(4))
+                {
+                    <div class="external-phonetic">
+                        @if (!string.IsNullOrWhiteSpace(
+                                    phonetic.Text))
+                        {
+                            <span>
+                                @phonetic.Text
+                            </span>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                                    phonetic.Audio) &&
+                                    phonetic.Audio.StartsWith(
+                                    "https://",
+                                    StringComparison.OrdinalIgnoreCase))
+                        {
+                            <audio controls
+                                   preload="metadata"
+                                   src="@phonetic.Audio">
+                                Trình duyệt không hỗ trợ âm thanh.
+                            </audio>
+                        }
+                    </div>
+                }
+
+                @foreach (var meaning
+                        in entry.Meanings.Take(6))
+                {
+                    <section class="external-meaning">
+                        <h3>
+                            @meaning.PartOfSpeech
+                        </h3>
+
+                        <ol>
+                            @foreach (var definition
+                                            in meaning.Definitions.Take(4))
+                            {
+                                <li>
+                                    <p>
+                                        @definition.Text
+                                    </p>
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                                        definition.Example))
+                                    {
+                                        <blockquote>
+                                            @definition.Example
+                                        </blockquote>
+                                    }
+                                </li>
+                            }
+                        </ol>
+
+                        @{
+                            var synonyms =
+                            meaning.Synonyms
+                            .Concat(
+                            meaning.Definitions
+                            .SelectMany(
+                            definition =>
+                            definition.Synonyms))
+                            .Where(item =>
+                            !string.IsNullOrWhiteSpace(
+                            item))
+                            .Distinct(
+                            StringComparer.OrdinalIgnoreCase)
+                            .Take(10)
+                            .ToList();
+                        }
+
+                        @if (synonyms.Count > 0)
+                        {
+                            <p class="external-related">
+                                <strong>Synonyms:</strong>
+                                @string.Join(", ", synonyms)
+                            </p>
+                        }
+
+                        @{
+                            var antonyms =
+                            meaning.Antonyms
+                            .Concat(
+                            meaning.Definitions
+                            .SelectMany(
+                            definition =>
+                            definition.Antonyms))
+                            .Where(item =>
+                            !string.IsNullOrWhiteSpace(
+                            item))
+                            .Distinct(
+                            StringComparer.OrdinalIgnoreCase)
+                            .Take(10)
+                            .ToList();
+                        }
+
+                        @if (antonyms.Count > 0)
+                        {
+                            <p class="external-related">
+                                <strong>Antonyms:</strong>
+                                @string.Join(", ", antonyms)
+                            </p>
+                        }
+                    </section>
+                }
+
+                <footer class="external-attribution">
+                    Dữ liệu: Dictionary API
+
+                    @if (entry.SourceUrls.Count > 0 &&
+                                entry.SourceUrls[0].StartsWith(
+                                "https://",
+                                StringComparison.OrdinalIgnoreCase))
+                    {
+                        <span>
+                            ·
+                            <a href="@entry.SourceUrls[0]"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                Xem nguồn
+                            </a>
+                        </span>
+                    }
+
+                    @if (entry.License is not null &&
+                                !string.IsNullOrWhiteSpace(
+                                entry.License.Name))
+                    {
+                        <span>
+                            · Giấy phép:
+                            @if (entry.License.Url.StartsWith(
+                                            "https://",
+                                            StringComparison.OrdinalIgnoreCase))
+                            {
+                                <a href="@entry.License.Url"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    @entry.License.Name
+                                </a>
+                            }
+                            else
+                            {
+                                @entry.License.Name
+                            }
+                        </span>
+                    }
+                </footer>
+            </article>
+        }
+    </div>
+
+    <div class="notice">
+        Kết quả API sử dụng định nghĩa tiếng Anh và
+        chưa có nghĩa tiếng Việt hoặc cấp độ CEFR.
+    </div>
+}
+else if (Model.HasSearched &&
+        string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="empty">
+        <h2>Không tìm thấy từ này</h2>
+
+        <p>
+            Từ “@Model.Query” không có trong kho nội bộ
+            và API bên ngoài.
+        </p>
+    </div>
+}
+
+<p class="muted dictionary-note">
+    Dữ liệu từ API chỉ dùng để tra cứu và không tự động
+    được lưu vào database.
+</p>
+<script>
+    document.addEventListener("click", function (event) {
+        const button =
+            event.target.closest(
+                "[data-dictionary-speak]");
+
+        if (!button) {
+            return;
+        }
+
+        if (!("speechSynthesis" in window)) {
+            alert(
+                "Trình duyệt không hỗ trợ đọc từ.");
+            return;
+        }
+
+        const word =
+            button.dataset.word;
+
+        const language =
+            button.dataset.language;
+
+        window.speechSynthesis.cancel();
+
+        const utterance =
+            new SpeechSynthesisUtterance(word);
+
+        utterance.lang = language;
+        utterance.rate = 0.85;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        const voices =
+            window.speechSynthesis.getVoices();
+
+        const preferredVoice =
+            voices.find(function (voice) {
+                return voice.lang
+                    .toLowerCase() ===
+                    language.toLowerCase();
+            }) ??
+            voices.find(function (voice) {
+                return voice.lang
+                    .toLowerCase()
+                    .startsWith(
+                        language
+                            .substring(0, 2)
+                            .toLowerCase());
+            });
+
+        if (preferredVoice) {
+            utterance.voice =
+                preferredVoice;
+        }
+
+        window.speechSynthesis.speak(
+            utterance);
+    });
+</script>

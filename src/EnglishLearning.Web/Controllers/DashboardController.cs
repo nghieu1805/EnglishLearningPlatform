@@ -1,4 +1,4 @@
-using EnglishLearning.Application.Interfaces;
+﻿using EnglishLearning.Application.Interfaces;
 using EnglishLearning.Domain.Enums;
 using EnglishLearning.Infrastructure.Data;
 using EnglishLearning.Web.ViewModels;
@@ -24,7 +24,7 @@ public class DashboardController(
                 status.Value))
         {
             return BadRequest(
-                "Tr?ng th�i h?c kh�ng h?p l?.");
+                "Trạng thái học không hợp lệ.");
         }
 
         string? userId =

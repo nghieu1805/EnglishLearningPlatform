@@ -74,6 +74,18 @@ builder.Services.AddControllersWithViews(
             new EnglishLearning.Web.ViewModels
                 .EmptyStringMetadataProvider());
     });
+builder.Services.AddHttpClient<DictionaryApiService>(
+    client =>
+    {
+        client.BaseAddress =
+            new Uri("https://api.dictionaryapi.dev/");
+
+        client.Timeout =
+            TimeSpan.FromSeconds(30);
+
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "EApp-EnglishLearning/1.0");
+    });
 
 var app = builder.Build();
 
