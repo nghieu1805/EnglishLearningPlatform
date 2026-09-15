@@ -31,9 +31,13 @@ builder.Services
             options.User.RequireUniqueEmail = true;
 
             options.Password.RequiredLength = 8;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = false;
 
+            options.Lockout.AllowedForNewUsers = true;
             options.Lockout.MaxFailedAccessAttempts = 5;
-
             options.Lockout.DefaultLockoutTimeSpan =
                 TimeSpan.FromMinutes(15);
         })
@@ -43,16 +47,22 @@ builder.Services
 builder.Services.ConfigureApplicationCookie(
     options =>
     {
-        options.LoginPath =
-            "/Account/Login";
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/Denied";
 
-        options.AccessDeniedPath =
-            "/Account/Denied";
-
+        options.Cookie.Name = "EApp.Auth";
         options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
 
-        options.Cookie.SameSite =
-            SameSiteMode.Lax;
+        options.Cookie.SecurePolicy =
+            builder.Environment.IsDevelopment()
+                ? CookieSecurePolicy.SameAsRequest
+                : CookieSecurePolicy.Always;
+
+        options.ExpireTimeSpan =
+            TimeSpan.FromHours(8);
+
+        options.SlidingExpiration = true;
     });
 
 builder.Services.AddScoped<
@@ -64,6 +74,23 @@ builder.Services.AddScoped<QuizService>();
 builder.Services.AddScoped<
     VocabularyImportService>();
 
+builder.Services.AddHttpClient<
+    DictionaryApiService>(
+        client =>
+        {
+            client.BaseAddress =
+                new Uri(
+                    "https://api.dictionaryapi.dev/");
+
+            client.Timeout =
+                TimeSpan.FromSeconds(30);
+
+            client.DefaultRequestHeaders
+                .UserAgent
+                .ParseAdd(
+                    "EApp-EnglishLearning/1.0");
+        });
+
 builder.Services.AddControllersWithViews(
     options =>
     {
@@ -73,18 +100,6 @@ builder.Services.AddControllersWithViews(
         options.ModelMetadataDetailsProviders.Add(
             new EnglishLearning.Web.ViewModels
                 .EmptyStringMetadataProvider());
-    });
-builder.Services.AddHttpClient<DictionaryApiService>(
-    client =>
-    {
-        client.BaseAddress =
-            new Uri("https://api.dictionaryapi.dev/");
-
-        client.Timeout =
-            TimeSpan.FromSeconds(30);
-
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(
-            "EApp-EnglishLearning/1.0");
     });
 
 var app = builder.Build();
@@ -96,7 +111,8 @@ if (args.Contains("--seed"))
 
     await DbSeeder.SeedAsync(
         scope.ServiceProvider
-            .GetRequiredService<ApplicationDbContext>(),
+            .GetRequiredService<
+                ApplicationDbContext>(),
 
         scope.ServiceProvider
             .GetRequiredService<
@@ -112,22 +128,45 @@ if (args.Contains("--seed"))
         builder.Configuration[
             "Seed:AdminPassword"],
 
-        builder.Configuration
-            .GetValue<bool>(
-                "Seed:DemoContent"));
+        builder.Configuration.GetValue<bool>(
+            "Seed:DemoContent"));
 
     return;
 }
-
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler(
-        "/Home/Error");
+    app.UseExceptionHandler("/Home/Error");
 
     app.UseHsts();
 
     app.UseHttpsRedirection();
 }
+
+// Thêm các HTTP security headers.
+app.Use(
+    async (context, next) =>
+    {
+        context.Response.Headers[
+            "X-Content-Type-Options"] = "nosniff";
+
+        context.Response.Headers[
+            "X-Frame-Options"] = "DENY";
+
+        context.Response.Headers[
+            "Referrer-Policy"] =
+            "strict-origin-when-cross-origin";
+
+        context.Response.Headers[
+            "Permissions-Policy"] =
+            "camera=(), microphone=(), geolocation=()";
+
+        await next();
+    });
+
+// Chuyển các lỗi HTTP như 404 sang trang thông báo thân thiện.
+app.UseStatusCodePagesWithReExecute(
+    "/Home/HttpStatus",
+    "?code={0}");
 
 app.UseStaticFiles();
 
@@ -143,6 +182,8 @@ app.MapControllerRoute(
         "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+// Cho phép project Integration Test truy cập Program.
 public partial class Program
 {
 }

@@ -1,1 +1,38 @@
-<h1>Bạn không có quyền truy cập</h1><p>Trang này chỉ dành cho quản trị viên.</p>
+@{
+    ViewData["Title"] = "Không có quyền truy cập";
+}
+
+<section class="error-page">
+    <p class="error-code">403</p>
+
+    <p class="eyebrow">ACCESS DENIED</p>
+
+    <h1>Bạn không có quyền truy cập</h1>
+
+    <p>
+        Tài khoản hiện tại không có quyền sử dụng
+        chức năng này.
+    </p>
+
+    <p class="muted">
+        Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ
+        quản trị viên để kiểm tra role tài khoản.
+    </p>
+
+    <div class="actions error-actions">
+        <a class="btn"
+           asp-controller="Home"
+           asp-action="Index">
+            Về trang chủ
+        </a>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="btn secondary"
+               asp-controller="Dashboard"
+               asp-action="Index">
+                Xem tiến độ
+            </a>
+        }
+    </div>
+</section>

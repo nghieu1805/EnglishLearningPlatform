@@ -1,1 +1,38 @@
-<h1>Không thể xử lý yêu cầu</h1><p>Vui lòng thử lại. Nếu lỗi tiếp diễn, kiểm tra log trên máy chạy ứng dụng.</p>
+@{
+    ViewData["Title"] = "Lỗi hệ thống";
+}
+
+<section class="error-page">
+    <p class="error-code">500</p>
+
+    <p class="eyebrow">SYSTEM ERROR</p>
+
+    <h1>Không thể xử lý yêu cầu</h1>
+
+    <p>
+        Hệ thống đã gặp lỗi trong quá trình xử lý.
+        Vui lòng thử lại sau.
+    </p>
+
+    <div class="actions error-actions">
+        <a class="btn"
+           asp-controller="Home"
+           asp-action="Index">
+            Về trang chủ
+        </a>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="btn secondary"
+               asp-controller="Dashboard"
+               asp-action="Index">
+                Xem tiến độ
+            </a>
+        }
+    </div>
+
+    <p class="muted">
+        Nếu lỗi tiếp tục xảy ra, quản trị viên cần
+        kiểm tra log của ứng dụng.
+    </p>
+</section>

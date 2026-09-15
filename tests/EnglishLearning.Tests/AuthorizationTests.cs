@@ -11,8 +11,7 @@ public class AuthorizationTests(
     [Fact]
     public async Task AnonymousUserCannotOpenAdmin()
     {
-        using var client =
-            CreateClient();
+        using var client = CreateClient();
 
         var response =
             await client.GetAsync("/Admin");
@@ -91,6 +90,47 @@ public class AuthorizationTests(
         Assert.Equal(
             HttpStatusCode.OK,
             response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnknownRouteReturnsFriendly404Page()
+    {
+        using var client = CreateClient();
+
+        var response =
+            await client.GetAsync(
+                "/this-page-does-not-exist");
+
+        var content =
+            await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            response.StatusCode);
+
+        Assert.Contains(
+            "Không tìm thấy trang",
+            content);
+    }
+
+    [Fact]
+    public async Task ErrorEndpointReturnsFriendly500Page()
+    {
+        using var client = CreateClient();
+
+        var response =
+            await client.GetAsync("/Home/Error");
+
+        var content =
+            await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(
+            HttpStatusCode.InternalServerError,
+            response.StatusCode);
+
+        Assert.Contains(
+            "Không thể xử lý yêu cầu",
+            content);
     }
 
     private HttpClient CreateClient(

@@ -1,8 +1,34 @@
 using EnglishLearning.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+
 namespace EnglishLearning.Web.Controllers;
-public class HomeController(ILearningRepository repository):Controller
+
+public class HomeController(
+    ILearningRepository repository) : Controller
 {
- public async Task<IActionResult> Index()=>View(await repository.GradesAsync());
- public IActionResult Error(){Response.StatusCode=500;return View();}
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var grades =
+            await repository.GradesAsync();
+
+        return View(grades);
+    }
+
+    [HttpGet]
+    public IActionResult Error()
+    {
+        Response.StatusCode =
+            StatusCodes.Status500InternalServerError;
+
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult HttpStatus(int code)
+    {
+        Response.StatusCode = code;
+
+        return View(code);
+    }
 }
