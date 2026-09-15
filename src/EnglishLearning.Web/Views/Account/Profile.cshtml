@@ -1,4 +1,197 @@
-@model ProfileModel
-@{ViewData["Title"]="Hồ sơ học sinh";}
-<section class="auth"><p class="eyebrow">EAPP ACCOUNT</p><h1>Hồ sơ học sinh</h1><form method="post" asp-action="Profile"><div asp-validation-summary="All" role="alert"></div><label asp-for="DisplayName">Họ tên</label><input asp-for="DisplayName"/><span asp-validation-for="DisplayName"></span>
-<label asp-for="CurrentGrade">Lớp hiện tại</label><input asp-for="CurrentGrade"/><span asp-validation-for="CurrentGrade"></span><button class="btn">Lưu hồ sơ</button></form></section>
+@model ProfilePageModel
+
+@{
+    ViewData["Title"] = "Hồ sơ tài khoản";
+}
+
+<section class="profile-page">
+    <p class="eyebrow">EAPP ACCOUNT</p>
+    <h1>Hồ sơ tài khoản</h1>
+
+    @if (TempData["Message"] is string message)
+    {
+        <div class="notice"
+             role="status">
+            @message
+        </div>
+    }
+
+    <div class="profile-identity">
+        <div>
+            <span class="muted">Email</span>
+            <strong>@Model.Email</strong>
+        </div>
+
+        <div>
+            <span class="muted">Quyền tài khoản</span>
+
+            <div class="profile-roles">
+                @if (Model.Roles.Count == 0)
+                {
+                    <span class="tag">
+                        Chưa có role
+                    </span>
+                }
+                else
+                {
+                    @foreach (var role in Model.Roles)
+                    {
+                        <span class="tag">
+                            @role
+                        </span>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="stats profile-stats">
+        <article>
+            <strong>@Model.LearnedWords</strong>
+            <span>Từ đã thuộc</span>
+        </article>
+
+        <article>
+            <strong>@Model.LearningWords</strong>
+            <span>Từ đang học</span>
+        </article>
+
+        <article>
+            <strong>@Model.NeedsReviewWords</strong>
+            <span>Từ cần ôn</span>
+        </article>
+
+        <article>
+            <strong>@Model.QuizAttempts</strong>
+            <span>Lượt làm quiz</span>
+        </article>
+
+        <article>
+            <strong>@Model.QuizAccuracy%</strong>
+            <span>Độ chính xác quiz</span>
+        </article>
+    </div>
+
+    <div class="profile-grid">
+        <section class="profile-card">
+            <p class="eyebrow">
+                PERSONAL INFORMATION
+            </p>
+
+            <h2>Thông tin cá nhân</h2>
+
+            <form asp-controller="Account"
+                  asp-action="UpdateProfile"
+                  method="post"
+                  class="editor"
+                  asp-antiforgery="true">
+
+                <div asp-validation-summary="ModelOnly"
+                     role="alert">
+                </div>
+
+                <div>
+                    <label asp-for="Profile.DisplayName">
+                        Họ tên
+                    </label>
+
+                    <input asp-for="Profile.DisplayName"
+                           autocomplete="name" />
+
+                    <span asp-validation-for="Profile.DisplayName">
+                    </span>
+                </div>
+
+                <div>
+                    <label asp-for="Profile.CurrentGrade">
+                        Lớp hiện tại
+                    </label>
+
+                    <select asp-for="Profile.CurrentGrade">
+                        @for (int grade = 1;
+                                                grade <= 12;
+                                                grade++)
+                        {
+                            <option value="@grade">
+                                Lớp @grade
+                            </option>
+                        }
+                    </select>
+
+                    <span asp-validation-for="Profile.CurrentGrade">
+                    </span>
+                </div>
+
+                <button class="btn"
+                        type="submit">
+                    Lưu hồ sơ
+                </button>
+            </form>
+        </section>
+
+        <section class="profile-card">
+            <p class="eyebrow">SECURITY</p>
+            <h2>Đổi mật khẩu</h2>
+
+            <form asp-controller="Account"
+                  asp-action="ChangePassword"
+                  method="post"
+                  class="editor"
+                  asp-antiforgery="true">
+
+                <div asp-validation-summary="ModelOnly"
+                     role="alert">
+                </div>
+
+                <div>
+                    <label asp-for="Password.CurrentPassword">
+                        Mật khẩu hiện tại
+                    </label>
+
+                    <input asp-for="Password.CurrentPassword"
+                           autocomplete="current-password" />
+
+                    <span asp-validation-for="Password.CurrentPassword">
+                    </span>
+                </div>
+
+                <div>
+                    <label asp-for="Password.NewPassword">
+                        Mật khẩu mới
+                    </label>
+
+                    <input asp-for="Password.NewPassword"
+                           autocomplete="new-password" />
+
+                    <span asp-validation-for="Password.NewPassword">
+                    </span>
+                </div>
+
+                <div>
+                    <label asp-for="Password.ConfirmNewPassword">
+                        Xác nhận mật khẩu mới
+                    </label>
+
+                    <input asp-for="Password.ConfirmNewPassword"
+                           autocomplete="new-password" />
+
+                    <span asp-validation-for="Password.ConfirmNewPassword">
+                    </span>
+                </div>
+
+                <button class="btn"
+                        type="submit">
+                    Đổi mật khẩu
+                </button>
+            </form>
+        </section>
+    </div>
+
+    <div class="actions">
+        <a class="btn secondary"
+           asp-controller="Dashboard"
+           asp-action="Index">
+            Xem toàn bộ tiến độ
+        </a>
+    </div>
+</section>
