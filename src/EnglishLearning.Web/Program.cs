@@ -103,6 +103,18 @@ builder.Services.AddControllersWithViews(
     });
 
 var app = builder.Build();
+if (builder.Configuration.GetValue<bool>(
+        "Database:MigrateOnStartup"))
+{
+    using var migrationScope =
+        app.Services.CreateScope();
+
+    var database =
+        migrationScope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
+
+    await database.Database.MigrateAsync();
+}
 
 if (args.Contains("--seed"))
 {

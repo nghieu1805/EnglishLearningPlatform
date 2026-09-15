@@ -1,0 +1,54 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: eapp-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - eapp_mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  web:
+    image: eapp-web:local
+    container_name: eapp-web
+    restart: unless-stopped
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      Database__MigrateOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};"
+      Seed__AdminEmail: "${SEED_ADMIN_EMAIL}"
+      Seed__AdminPassword: "${SEED_ADMIN_PASSWORD}"
+      Seed__DemoContent: "true"
+
+    ports:
+      - "5000:8080"
+
+volumes:
+  eapp_mysql_data:

@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/TestResults/
+
+.git/
+
+*.user
+*.suo
+*.cache
+*.log
+
+appsettings.Development.json
+appsettings.Production.json
+.env

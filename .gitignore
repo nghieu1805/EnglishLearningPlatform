@@ -6,3 +6,5 @@
 .env
 TestResults/
 *.log
+.env
+appsettings.Production.json
