@@ -103,20 +103,23 @@ builder.Services.AddControllersWithViews(
     });
 
 var app = builder.Build();
+
 if (builder.Configuration.GetValue<bool>(
         "Database:MigrateOnStartup"))
 {
-    using var migrationScope =
-        app.Services.CreateScope();
+using var migrationScope =
+    app.Services.CreateScope();
 
-    var database =
-        migrationScope.ServiceProvider
-            .GetRequiredService<ApplicationDbContext>();
+var database =
+    migrationScope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
 
-    await database.Database.MigrateAsync();
+await database.Database.MigrateAsync();
 }
 
 if (args.Contains("--seed"))
+
+    if (args.Contains("--seed"))
 {
     using var scope =
         app.Services.CreateScope();
@@ -187,6 +190,39 @@ app.UseRouting();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.MapGet(
+        "/health",
+        async Task<IResult>(
+            ApplicationDbContext database) =>
+        {
+            try
+            {
+                var canConnect =
+                    await database.Database
+                        .CanConnectAsync();
+
+                if (!canConnect)
+                {
+                    return Results.StatusCode(
+                        StatusCodes
+                            .Status503ServiceUnavailable);
+                }
+
+                return Results.Ok(
+                    new
+                    {
+                        status = "Healthy"
+                    });
+            }
+            catch
+            {
+                return Results.StatusCode(
+                    StatusCodes
+                        .Status503ServiceUnavailable);
+            }
+        })
+    .AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",

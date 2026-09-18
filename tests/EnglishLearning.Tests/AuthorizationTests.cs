@@ -133,6 +133,26 @@ public class AuthorizationTests(
             content);
     }
 
+    [Fact]
+    public async Task HealthEndpointReturnsHealthy()
+    {
+        using var client = CreateClient();
+
+        var response =
+            await client.GetAsync("/health");
+
+        var content =
+            await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
+        Assert.Contains(
+            "Healthy",
+            content);
+    }
+
     private HttpClient CreateClient(
         string? role = null)
     {

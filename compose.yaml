@@ -50,5 +50,17 @@ services:
     ports:
       - "5000:8080"
 
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - --fail
+        - --silent
+        - http://localhost:8080/health
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 volumes:
   eapp_mysql_data:
