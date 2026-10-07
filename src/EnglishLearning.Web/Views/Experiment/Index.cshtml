@@ -3,61 +3,183 @@
 @using Microsoft.Extensions.Hosting
 @using EnglishLearning.Domain.Enums
 
-@if (Model is not null && HostEnvironment.IsDevelopment())
+@{
+    ViewData["Title"] = "Phiên trải nghiệm";
 
+    string phaseText = Model?.Phase switch
+    {
+        ExperimentPhase.Familiarisation => "Làm quen",
+        ExperimentPhase.Adaptation => "Chờ quyết định thay đổi giao diện",
+        ExperimentPhase.Measurement => "Thực hiện tác vụ",
+        ExperimentPhase.Completed => "Đã hoàn thành",
+        _ => "Chưa bắt đầu"
+    };
+}
+
+<div class="section-heading">
+    <div>
+        <h1>Phiên trải nghiệm học tiếng Anh</h1>
+
+        <p>
+            Thực hiện các bước theo hướng dẫn.
+            Tiến trình của bạn được lưu theo tài khoản.
+        </p>
+    </div>
+</div>
+
+@if (Model is null)
 {
-    @if (Model.Phase == ExperimentPhase.Familiarisation)
-    {
-        <div class="word-card">
-            <h2>Kiểm tra adaptation</h2>
+    <div class="word-card">
+        <h2>Bắt đầu phiên</h2>
 
+        <p>Nhấn nút bên dưới để tạo phiên trải nghiệm.</p>
+
+        <form asp-controller="Experiment"
+              asp-action="Start"
+              method="post"
+              asp-antiforgery="true">
+
+            <button type="submit" class="btn">
+                Bắt đầu
+            </button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="word-card">
+        <h2>Phiên trải nghiệm của bạn</h2>
+
+        <p>
+            <strong>Trạng thái:</strong> @phaseText
+        </p>
+
+        @if (Model.Phase == ExperimentPhase.Familiarisation)
+        {
             <p>
-                Nút thử dành cho phát triển.
-                Chưa thay thế quy trình làm quen chính thức.
+                Mở quiz hiện có để làm quen với giao diện.
             </p>
 
-            <form asp-controller="Experiment"
-                  asp-action="TriggerAdaptation"
-                  method="post"
-                  asp-antiforgery="true">
-
-                <button type="submit" class="btn">
-                    Kích hoạt adaptation thử
-                </button>
-            </form>
-        </div>
-    }
-    else if (Model.Phase == ExperimentPhase.Adaptation)
-    {
-        <div class="word-card">
-            <h2>Đề xuất thay đổi giao diện</h2>
-
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn">
+                Đến lớp học
+            </a>
+        }
+        else if (Model.Phase == ExperimentPhase.Adaptation)
+        {
             <p>
-                Hệ thống đề xuất sắp xếp lại giao diện.
-                Bạn có muốn áp dụng thay đổi không?
+                Hệ thống đang chờ quyết định của bạn
+                trước khi chuyển sang bước tiếp theo.
+            </p>
+        }
+        else if (Model.Phase == ExperimentPhase.Measurement)
+        {
+            <p>
+                Bạn đã chuyển sang bước tiếp theo.
+                Mở lại quiz hiện có để tiếp tục.
             </p>
 
-            <form asp-controller="Experiment"
-                  asp-action="DecideAdaptation"
-                  method="post"
-                  asp-antiforgery="true">
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn">
+                Đến lớp học
+            </a>
+        }
+        else if (Model.Phase == ExperimentPhase.Completed)
+        {
+            <p>Phiên trải nghiệm đã hoàn thành.</p>
 
-                <div class="actions">
-                    <button type="submit"
-                            name="accepted"
-                            value="true"
-                            class="btn">
-                        Accept — Áp dụng
-                    </button>
+            <a asp-controller="Dashboard"
+               asp-action="Index"
+               class="btn secondary">
+                Xem tiến độ
+            </a>
+        }
+    </div>
 
-                    <button type="submit"
-                            name="accepted"
-                            value="false"
-                            class="btn secondary">
-                        Reject — Giữ bố cục
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <div class="word-card">
+            <h2>Thông tin kiểm tra khi phát triển</h2>
+
+            <dl>
+                <dt>Mã phiên</dt>
+                <dd>@Model.Id</dd>
+
+                <dt>Cấu hình</dt>
+                <dd>@Model.Mode</dd>
+
+                <dt>Giai đoạn</dt>
+                <dd>@Model.Phase</dd>
+
+                <dt>Đã áp dụng thay đổi</dt>
+                <dd>@(Model.AdaptationApplied ? "Có" : "Chưa")</dd>
+
+                <dt>Quyết định phê duyệt</dt>
+                <dd>
+                    @(Model.AdaptationAccepted.HasValue
+                                ? (Model.AdaptationAccepted.Value
+                                ? "Accept"
+                                : "Reject")
+                                : "Chưa quyết định hoặc không cần hỏi")
+        </dd>
+    </dl>
+</div>
+
+@if (Model.Phase == ExperimentPhase.Familiarisation)
+        {
+            <div class="word-card">
+                <h2>Kiểm tra adaptation</h2>
+
+                <p>
+                    Nút thử dành cho phát triển.
+                    Chưa thay thế quy trình làm quen chính thức.
+                </p>
+
+                <form asp-controller="Experiment"
+                      asp-action="TriggerAdaptation"
+                      method="post"
+                      asp-antiforgery="true">
+
+                    <button type="submit" class="btn">
+                        Kích hoạt adaptation thử
                     </button>
-                </div>
-            </form>
-        </div>
+                </form>
+            </div>
+        }
+        else if (Model.Phase == ExperimentPhase.Adaptation)
+        {
+            <div class="word-card">
+                <h2>Đề xuất thay đổi giao diện</h2>
+
+                <p>
+                    Hệ thống đề xuất sắp xếp lại giao diện.
+                    Bạn có muốn áp dụng thay đổi không?
+                </p>
+
+                <form asp-controller="Experiment"
+                      asp-action="DecideAdaptation"
+                      method="post"
+                      asp-antiforgery="true">
+
+                    <div class="actions">
+                        <button type="submit"
+                                name="accepted"
+                                value="true"
+                                class="btn">
+                            Accept — Áp dụng
+                        </button>
+
+                        <button type="submit"
+                                name="accepted"
+                                value="false"
+                                class="btn secondary">
+                            Reject — Giữ bố cục
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
     }
 }

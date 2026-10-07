@@ -1,3 +1,23 @@
+@using System.Security.Claims
+@inject EnglishLearning.Web.Services.ExperimentService ExperimentService
+
+@{
+    bool useAdaptedMenu = false;
+
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var userId = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            var session = await ExperimentService.GetAsync(userId);
+
+            useAdaptedMenu =
+                session?.AdaptationApplied == true;
+        }
+    }
+}
 <!DOCTYPE html>
 
 <html lang="vi">
@@ -41,27 +61,52 @@
             </a>
 
             <div class="nav-links">
-                <a asp-controller="Home"
-                   asp-action="Index">
-                    Lớp học
-                </a>
-
-                <a asp-controller="Dictionary"
-                   asp-action="Index">
-                    Từ điển
-                </a>
-
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <a asp-controller="Dashboard"
-                       asp-action="Index">
-                        Tiến độ
-                    </a>
+                    @if (useAdaptedMenu)
+                    {
+                        <a asp-controller="Experiment"
+                           asp-action="Index">
+                            Phiên trải nghiệm
+                        </a>
 
-                    <a asp-controller="Experiment"
-                       asp-action="Index">
-                        Phiên trải nghiệm
-                    </a>
+                        <a asp-controller="Dashboard"
+                           asp-action="Index">
+                            Tiến độ
+                        </a>
+
+                        <a asp-controller="Home"
+                           asp-action="Index">
+                            Lớp học
+                        </a>
+
+                        <a asp-controller="Dictionary"
+                           asp-action="Index">
+                            Từ điển
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Home"
+                           asp-action="Index">
+                            Lớp học
+                        </a>
+
+                        <a asp-controller="Dictionary"
+                           asp-action="Index">
+                            Từ điển
+                        </a>
+
+                        <a asp-controller="Dashboard"
+                           asp-action="Index">
+                            Tiến độ
+                        </a>
+
+                        <a asp-controller="Experiment"
+                           asp-action="Index">
+                            Phiên trải nghiệm
+                        </a>
+                    }
 
                     <a asp-controller="Account"
                        asp-action="Profile">
@@ -90,6 +135,16 @@
                 }
                 else
                 {
+                    <a asp-controller="Home"
+                       asp-action="Index">
+                        Lớp học
+                    </a>
+
+                    <a asp-controller="Dictionary"
+                       asp-action="Index">
+                        Từ điển
+                    </a>
+
                     <a asp-controller="Account"
                        asp-action="Login">
                         Đăng nhập
