@@ -8,3 +8,6 @@ TestResults/
 *.log
 .env
 appsettings.Production.json
+# Database backups
+backups/*.sql
+backups/*.gz

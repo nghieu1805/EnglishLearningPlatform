@@ -7,9 +7,28 @@ using EnglishLearning.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder =
     WebApplication.CreateBuilder(args);
+var dataProtectionKeysPath =
+    builder.Configuration[
+        "DataProtection:KeysPath"];
+
+if (!string.IsNullOrWhiteSpace(
+        dataProtectionKeysPath))
+{
+    Directory.CreateDirectory(
+        dataProtectionKeysPath);
+
+    builder.Services
+        .AddDataProtection()
+        .PersistKeysToFileSystem(
+            new DirectoryInfo(
+                dataProtectionKeysPath))
+        .SetApplicationName(
+            "EnglishLearningPlatform");
+}
 
 var connection =
     builder.Configuration.GetConnectionString(
@@ -70,7 +89,7 @@ builder.Services.AddScoped<
     LearningRepository>();
 
 builder.Services.AddScoped<QuizService>();
-
+builder.Services.AddScoped<ExperimentService>();
 builder.Services.AddScoped<
     VocabularyImportService>();
 
@@ -104,36 +123,109 @@ builder.Services.AddControllersWithViews(
 
 var app = builder.Build();
 
+// Tự động áp dụng migration khi cấu hình được bật.
 if (builder.Configuration.GetValue<bool>(
         "Database:MigrateOnStartup"))
 {
-using var migrationScope =
-    app.Services.CreateScope();
+    using var migrationScope =
+        app.Services.CreateScope();
 
-var database =
-    migrationScope.ServiceProvider
-        .GetRequiredService<ApplicationDbContext>();
+    var database =
+        migrationScope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
 
-await database.Database.MigrateAsync();
+    await database.Database.MigrateAsync();
 }
 
-if (args.Contains("--seed"))
-
-    if (args.Contains("--seed"))
+// Đặt lại mật khẩu Admin bằng cấu hình trong .env.
+if (args.Contains("--reset-admin-password"))
 {
-    using var scope =
+    using var resetScope =
+        app.Services.CreateScope();
+
+    var userManager =
+        resetScope.ServiceProvider
+            .GetRequiredService<
+                UserManager<ApplicationUser>>();
+
+    var adminEmail =
+        builder.Configuration[
+            "Seed:AdminEmail"];
+
+    var adminPassword =
+        builder.Configuration[
+            "Seed:AdminPassword"];
+
+    if (string.IsNullOrWhiteSpace(adminEmail) ||
+        string.IsNullOrWhiteSpace(adminPassword))
+    {
+        throw new InvalidOperationException(
+            "Thiếu Seed:AdminEmail hoặc " +
+            "Seed:AdminPassword.");
+    }
+
+    var admin =
+        await userManager.FindByEmailAsync(
+            adminEmail);
+
+    if (admin is null)
+    {
+        throw new InvalidOperationException(
+            $"Không tìm thấy tài khoản {adminEmail}.");
+    }
+
+    var resetToken =
+        await userManager
+            .GeneratePasswordResetTokenAsync(
+                admin);
+
+    var resetResult =
+        await userManager.ResetPasswordAsync(
+            admin,
+            resetToken,
+            adminPassword);
+
+    if (!resetResult.Succeeded)
+    {
+        var errors =
+            string.Join(
+                "; ",
+                resetResult.Errors.Select(
+                    error => error.Description));
+
+        throw new InvalidOperationException(
+            $"Không thể đặt lại mật khẩu: {errors}");
+    }
+
+    await userManager.SetLockoutEndDateAsync(
+        admin,
+        null);
+
+    await userManager
+        .ResetAccessFailedCountAsync(admin);
+
+    Console.WriteLine(
+        $"Đã đặt lại mật khẩu cho {adminEmail}.");
+
+    return;
+}
+
+// Tạo roles, Admin và nội dung demo.
+if (args.Contains("--seed"))
+{
+    using var seedScope =
         app.Services.CreateScope();
 
     await DbSeeder.SeedAsync(
-        scope.ServiceProvider
+        seedScope.ServiceProvider
             .GetRequiredService<
                 ApplicationDbContext>(),
 
-        scope.ServiceProvider
+        seedScope.ServiceProvider
             .GetRequiredService<
                 RoleManager<IdentityRole>>(),
 
-        scope.ServiceProvider
+        seedScope.ServiceProvider
             .GetRequiredService<
                 UserManager<ApplicationUser>>(),
 
@@ -148,6 +240,7 @@ if (args.Contains("--seed"))
 
     return;
 }
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -157,7 +250,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// Thêm các HTTP security headers.
+// HTTP security headers.
 app.Use(
     async (context, next) =>
     {
@@ -178,7 +271,7 @@ app.Use(
         await next();
     });
 
-// Chuyển các lỗi HTTP như 404 sang trang thông báo thân thiện.
+// Hiển thị trang lỗi thân thiện.
 app.UseStatusCodePagesWithReExecute(
     "/Home/HttpStatus",
     "?code={0}");
@@ -191,6 +284,7 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+// Health Check cho website và database.
 app.MapGet(
         "/health",
         async Task<IResult>(
@@ -231,7 +325,7 @@ app.MapControllerRoute(
 
 app.Run();
 
-// Cho phép project Integration Test truy cập Program.
+// Cho phép Integration Test truy cập Program.
 public partial class Program
 {
 }

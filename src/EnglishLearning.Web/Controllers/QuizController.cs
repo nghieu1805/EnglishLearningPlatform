@@ -3,6 +3,7 @@ using EnglishLearning.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using EnglishLearning.Web.Services;
 
 namespace EnglishLearning.Web.Controllers;
 
@@ -13,7 +14,8 @@ namespace EnglishLearning.Web.Controllers;
     NoStore = true)]
 public class QuizController(
     QuizService quizService,
-    ILearningRepository repository) : Controller
+    ILearningRepository repository,
+    ExperimentService experimentService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Take(int id)
@@ -30,7 +32,7 @@ public class QuizController(
             return NotFound(
                 "Quiz chưa sẵn sàng hoặc chủ đề chưa được xuất bản.");
         }
-
+        await LoadExperimentLayoutAsync();
         return View(model);
     }
 
@@ -154,7 +156,31 @@ public class QuizController(
         ModelState.AddModelError(
             string.Empty,
             message);
-
+        await LoadExperimentLayoutAsync();
         return View("Take", model);
+    }
+    private async Task LoadExperimentLayoutAsync()
+    {
+        // Mặc định giữ bố cục ban đầu.
+        ViewData["MoveSubmit"] = false;
+
+        var userId = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return;
+        }
+
+        var session = await experimentService.GetAsync(userId);
+
+        if (session is null)
+        {
+            return;
+        }
+
+        ViewData["MoveSubmit"] =
+            session.AdaptationApplied &&
+            !ExperimentService.IsSubmitFixed(session.Mode);
     }
 }

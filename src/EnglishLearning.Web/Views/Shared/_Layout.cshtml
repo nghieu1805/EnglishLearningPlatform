@@ -58,6 +58,11 @@
                         Tiến độ
                     </a>
 
+                    <a asp-controller="Experiment"
+                       asp-action="Index">
+                        Phiên trải nghiệm
+                    </a>
+
                     <a asp-controller="Account"
                        asp-action="Profile">
                         Hồ sơ
@@ -74,7 +79,8 @@
 
                     <form asp-controller="Account"
                           asp-action="Logout"
-                          method="post">
+                          method="post"
+                          asp-antiforgery="true">
 
                         <button class="btn secondary"
                                 type="submit">

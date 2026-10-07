@@ -42,6 +42,7 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: "http://+:8080"
       Database__MigrateOnStartup: "true"
+      DataProtection__KeysPath: "/app/keys"
       ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};"
       Seed__AdminEmail: "${SEED_ADMIN_EMAIL}"
       Seed__AdminPassword: "${SEED_ADMIN_PASSWORD}"
@@ -49,6 +50,8 @@ services:
 
     ports:
       - "5000:8080"
+    volumes:
+      - eapp_data_protection_keys:/app/keys
 
     healthcheck:
       test:
@@ -64,3 +67,4 @@ services:
 
 volumes:
   eapp_mysql_data:
+  eapp_data_protection_keys:

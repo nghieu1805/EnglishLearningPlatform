@@ -2,6 +2,9 @@
 
 @{
     ViewData["Title"] = Model.Title;
+
+    bool moveSubmit =
+        ViewData["MoveSubmit"] is bool value && value;
 }
 
 <div class="quiz-page">
@@ -24,54 +27,71 @@
           asp-action="Take"
           asp-route-id="@Model.Id"
           method="post"
-          asp-antiforgery="true">
+          asp-antiforgery="true"
+          class="experiment-quiz-form">
 
         <div asp-validation-summary="All"
              class="validation-summary">
         </div>
 
-        @for (int questionIndex = 0;
-                questionIndex < Model.Questions.Count;
-                questionIndex++)
-        {
-            var question =
-            Model.Questions[questionIndex];
+        <div class="experiment-quiz-workspace">
+            <div class="experiment-submit-slot experiment-submit-top">
+                @if (moveSubmit)
+                {
+                    <button id="quiz-submit"
+                            class="btn"
+                            type="submit">
+                        Nộp bài và xem kết quả
+                    </button>
+                }
+            </div>
 
-            <fieldset class="word-card">
-                <legend>
-                    Câu @(questionIndex + 1):
-                    @question.Prompt
-                </legend>
+            <div class="experiment-question-panel">
+                @for (int questionIndex = 0;
+                                questionIndex < Model.Questions.Count;
+                                questionIndex++)
+                {
+                    var question = Model.Questions[questionIndex];
 
-                <div class="quiz-choices">
-                    @foreach (var choice in question.Choices)
-                    {
-                        string inputId =
-                        $"question-{question.Id}-choice-{choice.Id}";
+                    <fieldset class="word-card">
+                        <legend>
+                            Câu @(questionIndex + 1):
+                            @question.Prompt
+                        </legend>
 
-                        <label class="choice"
-                               for="@inputId">
+                        <div class="quiz-choices">
+                            @foreach (var choice in question.Choices)
+                            {
+                                string inputId =
+                                $"question-{question.Id}-choice-{choice.Id}";
 
-                            <input id="@inputId"
-                                   type="radio"
-                                   name="selections[@question.Id]"
-                                   value="@choice.Id"
-                                   required />
+                                <label class="choice"
+                                       for="@inputId">
 
-                            <span>
-                                @choice.Text
-                            </span>
-                        </label>
-                    }
-                </div>
-            </fieldset>
-        }
+                                    <input id="@inputId"
+                                           type="radio"
+                                           name="selections[@question.Id]"
+                                           value="@choice.Id"
+                                           required />
 
-        <div class="actions">
-            <button class="btn"
-                    type="submit">
-                Nộp bài và xem kết quả
-            </button>
+                                    <span>@choice.Text</span>
+                                </label>
+                            }
+                        </div>
+                    </fieldset>
+                }
+            </div>
+
+            <div class="experiment-submit-slot experiment-submit-bottom">
+                @if (!moveSubmit)
+                {
+                    <button id="quiz-submit"
+                            class="btn"
+                            type="submit">
+                        Nộp bài và xem kết quả
+                    </button>
+                }
+            </div>
         </div>
     </form>
 </div>

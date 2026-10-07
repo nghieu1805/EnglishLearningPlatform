@@ -48,6 +48,9 @@ public class ApplicationDbContext(
     public DbSet<StudyHistory> StudyHistories =>
         Set<StudyHistory>();
 
+    public DbSet<ExperimentSession> ExperimentSessions =>
+        Set<ExperimentSession>();
+
     protected override void OnModelCreating(
         ModelBuilder builder)
     {
@@ -61,6 +64,7 @@ public class ApplicationDbContext(
         ConfigureExercise(builder);
         ConfigureQuizAttempt(builder);
         ConfigureStudyHistory(builder);
+        ConfigureExperimentSession(builder);
     }
 
     private static void ConfigureGrade(
@@ -215,5 +219,27 @@ public class ApplicationDbContext(
             .HasForeignKey(history =>
                 history.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    private static void ConfigureExperimentSession(
+        ModelBuilder builder)
+    {
+        builder.Entity<ExperimentSession>()
+            .HasIndex(session => session.UserId)
+            .IsUnique();
+
+        builder.Entity<ExperimentSession>()
+            .HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(session => session.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ExperimentSession>()
+            .Property(session => session.Mode)
+            .HasConversion<int>();
+
+        builder.Entity<ExperimentSession>()
+            .Property(session => session.Phase)
+            .HasConversion<int>();
     }
 }

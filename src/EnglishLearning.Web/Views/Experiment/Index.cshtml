@@ -1,0 +1,63 @@
+﻿@model EnglishLearning.Domain.Entities.ExperimentSession?
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@using Microsoft.Extensions.Hosting
+@using EnglishLearning.Domain.Enums
+
+@if (Model is not null && HostEnvironment.IsDevelopment())
+
+{
+    @if (Model.Phase == ExperimentPhase.Familiarisation)
+    {
+        <div class="word-card">
+            <h2>Kiểm tra adaptation</h2>
+
+            <p>
+                Nút thử dành cho phát triển.
+                Chưa thay thế quy trình làm quen chính thức.
+            </p>
+
+            <form asp-controller="Experiment"
+                  asp-action="TriggerAdaptation"
+                  method="post"
+                  asp-antiforgery="true">
+
+                <button type="submit" class="btn">
+                    Kích hoạt adaptation thử
+                </button>
+            </form>
+        </div>
+    }
+    else if (Model.Phase == ExperimentPhase.Adaptation)
+    {
+        <div class="word-card">
+            <h2>Đề xuất thay đổi giao diện</h2>
+
+            <p>
+                Hệ thống đề xuất sắp xếp lại giao diện.
+                Bạn có muốn áp dụng thay đổi không?
+            </p>
+
+            <form asp-controller="Experiment"
+                  asp-action="DecideAdaptation"
+                  method="post"
+                  asp-antiforgery="true">
+
+                <div class="actions">
+                    <button type="submit"
+                            name="accepted"
+                            value="true"
+                            class="btn">
+                        Accept — Áp dụng
+                    </button>
+
+                    <button type="submit"
+                            name="accepted"
+                            value="false"
+                            class="btn secondary">
+                        Reject — Giữ bố cục
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
+}

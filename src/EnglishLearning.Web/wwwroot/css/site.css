@@ -521,3 +521,31 @@
             }
     }
 }
+.experiment-quiz-workspace {
+    display: grid;
+    grid-template-rows: 64px minmax(0, 1fr) 64px;
+    height: 620px;
+    gap: 12px;
+}
+
+.experiment-submit-slot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px;
+}
+
+.experiment-question-panel {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px;
+    scrollbar-gutter: stable;
+}
+
+    .experiment-question-panel .word-card {
+        margin-bottom: 16px;
+    }
+
+.experiment-submit-slot .btn {
+    margin: 0;
+}
