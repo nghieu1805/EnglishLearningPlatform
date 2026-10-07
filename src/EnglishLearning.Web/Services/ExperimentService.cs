@@ -27,7 +27,7 @@ public class ExperimentService(ApplicationDbContext db)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
-        // Nếu đã có phiên thì giữ nguyên nhóm và tiến trình.
+        // Giữ nguyên nhóm và tiến trình nếu đã có phiên.
         var existing = await GetAsync(
             userId,
             cancellationToken);
@@ -35,17 +35,6 @@ public class ExperimentService(ApplicationDbContext db)
         if (existing is not null)
         {
             return existing;
-        }
-
-        var userExists = await db.Users
-            .AnyAsync(
-                user => user.Id == userId,
-                cancellationToken);
-
-        if (!userExists)
-        {
-            throw new InvalidOperationException(
-                "Không tìm thấy tài khoản người dùng.");
         }
 
         ExperimentMode[] modes =
@@ -56,42 +45,41 @@ public class ExperimentService(ApplicationDbContext db)
             ExperimentMode.D
         ];
 
-        var session = new ExperimentSession
-        {
-            UserId = userId,
-            Mode = modes[
-                RandomNumberGenerator.GetInt32(modes.Length)],
-            Phase = ExperimentPhase.Familiarisation,
-            AdaptationApplied = false,
-            AdaptationAccepted = null,
-            CreatedAtUtc = DateTime.UtcNow
-        };
+        var mode = modes[
+            RandomNumberGenerator.GetInt32(modes.Length)];
 
-        db.ExperimentSessions.Add(session);
+        return await CreateSessionAsync(
+            userId,
+            mode,
+            cancellationToken);
+    }
 
-        try
+    public async Task<ExperimentSession> CreateTestSessionAsync(
+        string userId,
+        ExperimentMode mode,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+        if (!Enum.IsDefined(typeof(ExperimentMode), mode))
         {
-            await db.SaveChangesAsync(cancellationToken);
-            return session;
+            throw new ArgumentOutOfRangeException(nameof(mode));
         }
-        catch (DbUpdateException)
+
+        // Không thay đổi nhóm của tài khoản đã có phiên.
+        var existing = await GetAsync(
+            userId,
+            cancellationToken);
+
+        if (existing is not null)
         {
-            // Xử lý trường hợp hai yêu cầu cùng tạo phiên
-            // cho một tài khoản tại cùng thời điểm.
-            db.Entry(session).State = EntityState.Detached;
-
-            var createdByAnotherRequest = await GetAsync(
-                userId,
-                cancellationToken);
-
-            if (createdByAnotherRequest is not null)
-            {
-                return createdByAnotherRequest;
-            }
-
-            // Nếu không phải trùng phiên, giữ nguyên lỗi database.
-            throw;
+            return existing;
         }
+
+        return await CreateSessionAsync(
+            userId,
+            mode,
+            cancellationToken);
     }
 
     public static bool RequiresApproval(
@@ -107,13 +95,16 @@ public class ExperimentService(ApplicationDbContext db)
         return mode is
             ExperimentMode.C or ExperimentMode.D;
     }
+
     public async Task TriggerAdaptationAsync(
-    string userId,
-    CancellationToken cancellationToken = default)
+        string userId,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
-        var session = await GetAsync(userId, cancellationToken);
+        var session = await GetAsync(
+            userId,
+            cancellationToken);
 
         if (session is null)
         {
@@ -126,10 +117,11 @@ public class ExperimentService(ApplicationDbContext db)
             return;
         }
 
-        bool needsApproval = RequiresApproval(session.Mode);
+        var needsApproval = RequiresApproval(session.Mode);
         var now = DateTime.UtcNow;
 
-        // Chỉ chuyển trạng thái nếu phiên vẫn đang ở giai đoạn làm quen.
+        // Dùng cho nút kích hoạt thử trong Development.
+        // Chỉ chuyển trạng thái nếu phiên vẫn đang làm quen.
         await db.ExperimentSessions
             .Where(item =>
                 item.UserId == userId &&
@@ -146,7 +138,9 @@ public class ExperimentService(ApplicationDbContext db)
                         !needsApproval)
                     .SetProperty(
                         item => item.AdaptationAppliedAtUtc,
-                        needsApproval ? (DateTime?)null : now),
+                        needsApproval
+                            ? (DateTime?)null
+                            : now),
                 cancellationToken);
     }
 
@@ -159,8 +153,8 @@ public class ExperimentService(ApplicationDbContext db)
 
         var now = DateTime.UtcNow;
 
-        // Chỉ B/D đang chờ quyết định mới được Accept/Reject.
-        // Quyết định đầu tiên được giữ nguyên nếu gửi lại form.
+        // Chỉ nhóm B/D đang chờ quyết định được Accept/Reject.
+        // Giữ nguyên quyết định đầu tiên nếu gửi lại form.
         await db.ExperimentSessions
             .Where(item =>
                 item.UserId == userId &&
@@ -178,31 +172,20 @@ public class ExperimentService(ApplicationDbContext db)
                         accepted)
                     .SetProperty(
                         item => item.AdaptationAppliedAtUtc,
-                        accepted ? (DateTime?)now : null)
+                        accepted
+                            ? (DateTime?)now
+                            : null)
                     .SetProperty(
                         item => item.Phase,
                         ExperimentPhase.Measurement),
                 cancellationToken);
     }
-    public async Task<ExperimentSession> CreateTestSessionAsync(
-    string userId,
-    ExperimentMode mode,
-    CancellationToken cancellationToken = default)
+
+    private async Task<ExperimentSession> CreateSessionAsync(
+        string userId,
+        ExperimentMode mode,
+        CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-
-        if (!Enum.IsDefined(typeof(ExperimentMode), mode))
-        {
-            throw new ArgumentOutOfRangeException(nameof(mode));
-        }
-
-        var existing = await GetAsync(userId, cancellationToken);
-
-        if (existing is not null)
-        {
-            return existing;
-        }
-
         var userExists = await db.Users.AnyAsync(
             user => user.Id == userId,
             cancellationToken);
@@ -233,6 +216,7 @@ public class ExperimentService(ApplicationDbContext db)
         }
         catch (DbUpdateException)
         {
+            // Hai yêu cầu đồng thời có thể cùng tạo phiên.
             db.Entry(session).State = EntityState.Detached;
 
             var concurrentSession = await GetAsync(
@@ -244,6 +228,7 @@ public class ExperimentService(ApplicationDbContext db)
                 return concurrentSession;
             }
 
+            // Giữ nguyên lỗi nếu không có phiên được tạo đồng thời.
             throw;
         }
     }
