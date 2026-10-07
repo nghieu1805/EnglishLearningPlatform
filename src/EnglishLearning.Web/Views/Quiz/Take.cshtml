@@ -5,6 +5,10 @@
 
     bool moveSubmit =
         ViewData["MoveSubmit"] is bool value && value;
+
+    var token = ViewData["AttemptToken"] is Guid attemptToken
+        ? attemptToken.ToString()
+        : "";
 }
 
 <div class="quiz-page">
@@ -23,16 +27,33 @@
         </div>
     </div>
 
-    <form asp-controller="Quiz"
+    <form id="experiment-quiz-form"
+          asp-controller="Quiz"
           asp-action="Take"
           asp-route-id="@Model.Id"
           method="post"
           asp-antiforgery="true"
-          class="experiment-quiz-form">
+          class="experiment-quiz-form"
+          data-attempt-token="@token"
+          data-move-submit="@moveSubmit.ToString().ToLowerInvariant()"
+          data-metrics-url="@Url.Action("SaveMetrics", "Quiz")">
+
+        @if (!string.IsNullOrEmpty(token))
+        {
+            <input type="hidden"
+                   name="attemptToken"
+                   value="@token" />
+        }
 
         <div asp-validation-summary="All"
              class="validation-summary">
         </div>
+
+        <p id="quiz-client-error"
+           class="text-danger"
+           role="alert"
+           hidden>
+        </p>
 
         <div class="experiment-quiz-workspace">
             <div class="experiment-submit-slot experiment-submit-top">
@@ -67,7 +88,6 @@
 
                                 <label class="choice"
                                        for="@inputId">
-
                                     <input id="@inputId"
                                            type="radio"
                                            name="selections[@question.Id]"
@@ -91,7 +111,23 @@
                         Nộp bài và xem kết quả
                     </button>
                 }
+                else
+                {
+                    @* Vùng vô hình có kích thước bằng nút ở vị trí cũ. *@
+                    <span id="old-submit-target"
+                          aria-hidden="true"
+                          style="display:block; flex:none;">
+                    </span>
+                }
             </div>
         </div>
     </form>
 </div>
+
+@section Scripts
+{
+    <script src="~/js/experiment-quiz.js"
+            asp-append-version="true"
+            defer>
+    </script>
+}

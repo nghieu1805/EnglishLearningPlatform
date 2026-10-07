@@ -20,7 +20,7 @@ public class ExperimentTaskService(ApplicationDbContext db)
                 item => item.UserId == userId,
                 cancellationToken);
 
-        // Người học chưa tham gia trải nghiệm vẫn có thể làm quiz.
+        // Người chưa tham gia trải nghiệm vẫn có thể làm quiz.
         if (session is null)
         {
             return null;
@@ -57,9 +57,8 @@ public class ExperimentTaskService(ApplicationDbContext db)
             return unfinishedTask;
         }
 
-        var taskLimit = phase == ExperimentPhase.Familiarisation
-            ? 2
-            : 1;
+        var taskLimit =
+            phase == ExperimentPhase.Familiarisation ? 2 : 1;
 
         var completedCount = tasks.Count(
             task => task.CompletedAtUtc.HasValue);
@@ -106,7 +105,7 @@ public class ExperimentTaskService(ApplicationDbContext db)
         }
         catch (DbUpdateException)
         {
-            // Hai lần mở trang đồng thời có thể cùng tạo một tác vụ.
+            // Hai yêu cầu mở trang có thể cùng tạo một tác vụ.
             db.Entry(newTask).State = EntityState.Detached;
 
             var existingTask = await db.ExperimentTasks
@@ -132,7 +131,8 @@ public class ExperimentTaskService(ApplicationDbContext db)
             if (existingTask.CompletedAtUtc.HasValue)
             {
                 throw new InvalidOperationException(
-                    "Tác vụ này đã hoàn thành. Hãy quay lại phiên trải nghiệm.");
+                    "Tác vụ này đã hoàn thành. " +
+                    "Hãy quay lại phiên trải nghiệm.");
             }
 
             return existingTask;
@@ -154,17 +154,20 @@ public class ExperimentTaskService(ApplicationDbContext db)
                     task.ExperimentSession.UserId == userId,
                 cancellationToken);
     }
+
     public async Task CompleteAsync(
-    string userId,
-    Guid attemptToken,
-    int quizAttemptId,
-    CancellationToken cancellationToken = default)
+        string userId,
+        Guid attemptToken,
+        int quizAttemptId,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
+        // Nếu controller đã mở transaction thì dùng transaction đó.
         await using var transaction =
             db.Database.CurrentTransaction is null
-                ? await db.Database.BeginTransactionAsync(cancellationToken)
+                ? await db.Database.BeginTransactionAsync(
+                    cancellationToken)
                 : null;
 
         var task = await GetOwnedAsync(
@@ -186,7 +189,7 @@ public class ExperimentTaskService(ApplicationDbContext db)
                     "Tác vụ đã được liên kết với một kết quả khác.");
             }
 
-            // Tiếp tục kiểm tra giai đoạn ở bên dưới.
+            // Vẫn kiểm tra chuyển giai đoạn khi gửi lại yêu cầu.
         }
         else
         {
@@ -200,14 +203,29 @@ public class ExperimentTaskService(ApplicationDbContext db)
             if (!validQuizAttempt)
             {
                 throw new InvalidOperationException(
-                    "Kết quả quiz không thuộc tài khoản hoặc bài đang làm.");
+                    "Kết quả quiz không thuộc tài khoản " +
+                    "hoặc bài đang làm.");
             }
 
             var completedAt = DateTime.UtcNow;
 
+            // Tổng thời gian từ khi bắt đầu tác vụ đến khi hoàn thành.
             var duration = Math.Max(
                 0L,
-                (long)(completedAt - task.StartedAtUtc).TotalMilliseconds);
+                (long)(completedAt - task.StartedAtUtc)
+                    .TotalMilliseconds);
+
+            // Thời gian từ lần đầu chọn đủ đáp án đến khi hoàn thành.
+            // Để null nếu chưa nhận được mốc thời gian từ trình duyệt.
+            long? timeToSubmit =
+                task.AllQuestionsAnsweredAtUtc.HasValue
+                    ? Math.Max(
+                        0L,
+                        (long)(
+                            completedAt -
+                            task.AllQuestionsAnsweredAtUtc.Value)
+                        .TotalMilliseconds)
+                    : null;
 
             var updatedRows = await db.ExperimentTasks
                 .Where(item =>
@@ -224,7 +242,10 @@ public class ExperimentTaskService(ApplicationDbContext db)
                             (DateTime?)completedAt)
                         .SetProperty(
                             item => item.DurationMilliseconds,
-                            (long?)duration),
+                            (long?)duration)
+                        .SetProperty(
+                            item => item.TimeToSubmitMilliseconds,
+                            timeToSubmit),
                     cancellationToken);
 
             if (updatedRows == 0)
@@ -239,7 +260,8 @@ public class ExperimentTaskService(ApplicationDbContext db)
                     latestTask.QuizAttemptId != quizAttemptId)
                 {
                     throw new InvalidOperationException(
-                        "Giai đoạn đã thay đổi hoặc tác vụ đã được xử lý.");
+                        "Giai đoạn đã thay đổi " +
+                        "hoặc tác vụ đã được xử lý.");
                 }
             }
         }
@@ -248,20 +270,24 @@ public class ExperimentTaskService(ApplicationDbContext db)
 
         if (task.Phase == ExperimentPhase.Familiarisation)
         {
-            var completedCount = await db.ExperimentTasks.CountAsync(
-                item =>
-                    item.ExperimentSessionId == task.ExperimentSessionId &&
-                    item.Phase == ExperimentPhase.Familiarisation &&
-                    item.CompletedAtUtc != null &&
-                    item.QuizAttemptId != null,
-                cancellationToken);
+            var completedCount = await db.ExperimentTasks
+                .CountAsync(
+                    item =>
+                        item.ExperimentSessionId ==
+                            task.ExperimentSessionId &&
+                        item.Phase ==
+                            ExperimentPhase.Familiarisation &&
+                        item.CompletedAtUtc != null &&
+                        item.QuizAttemptId != null,
+                    cancellationToken);
 
             if (completedCount >= 2)
             {
                 var session = await db.ExperimentSessions
                     .AsNoTracking()
                     .SingleAsync(
-                        item => item.Id == task.ExperimentSessionId,
+                        item =>
+                            item.Id == task.ExperimentSessionId,
                         cancellationToken);
 
                 var requiresApproval =
@@ -270,7 +296,8 @@ public class ExperimentTaskService(ApplicationDbContext db)
                 await db.ExperimentSessions
                     .Where(item =>
                         item.Id == session.Id &&
-                        item.Phase == ExperimentPhase.Familiarisation)
+                        item.Phase ==
+                            ExperimentPhase.Familiarisation)
                     .ExecuteUpdateAsync(
                         setters => setters
                             .SetProperty(
@@ -311,6 +338,4 @@ public class ExperimentTaskService(ApplicationDbContext db)
             await transaction.CommitAsync(cancellationToken);
         }
     }
-
 }
-
