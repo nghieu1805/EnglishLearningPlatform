@@ -3,6 +3,7 @@ using EnglishLearning.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using EnglishLearning.Domain.Enums;
 
 namespace EnglishLearning.Web.Controllers;
 
@@ -53,7 +54,39 @@ public class ExperimentController(
 
         return RedirectToAction(nameof(Index));
     }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> StartTest(
+    ExperimentMode? mode,
+    CancellationToken cancellationToken)
+    {
+        if (!environment.IsDevelopment())
+        {
+            return NotFound();
+        }
 
+        if (!ModelState.IsValid ||
+            !mode.HasValue ||
+            !Enum.IsDefined(typeof(ExperimentMode), mode.Value))
+        {
+            return BadRequest("Nhóm kiểm thử không hợp lệ.");
+        }
+
+        var userId = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Challenge();
+        }
+
+        await experimentService.CreateTestSessionAsync(
+            userId,
+            mode.Value,
+            cancellationToken);
+
+        return RedirectToAction(nameof(Index));
+    }
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> TriggerAdaptation(

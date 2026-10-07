@@ -184,4 +184,67 @@ public class ExperimentService(ApplicationDbContext db)
                         ExperimentPhase.Measurement),
                 cancellationToken);
     }
+    public async Task<ExperimentSession> CreateTestSessionAsync(
+    string userId,
+    ExperimentMode mode,
+    CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+        if (!Enum.IsDefined(typeof(ExperimentMode), mode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(mode));
+        }
+
+        var existing = await GetAsync(userId, cancellationToken);
+
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var userExists = await db.Users.AnyAsync(
+            user => user.Id == userId,
+            cancellationToken);
+
+        if (!userExists)
+        {
+            throw new InvalidOperationException(
+                "Không tìm thấy tài khoản người dùng.");
+        }
+
+        var session = new ExperimentSession
+        {
+            UserId = userId,
+            Mode = mode,
+            Phase = ExperimentPhase.Familiarisation,
+            AdaptationApplied = false,
+            AdaptationAccepted = null,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+        db.ExperimentSessions.Add(session);
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+
+            return session;
+        }
+        catch (DbUpdateException)
+        {
+            db.Entry(session).State = EntityState.Detached;
+
+            var concurrentSession = await GetAsync(
+                userId,
+                cancellationToken);
+
+            if (concurrentSession is not null)
+            {
+                return concurrentSession;
+            }
+
+            throw;
+        }
+    }
 }

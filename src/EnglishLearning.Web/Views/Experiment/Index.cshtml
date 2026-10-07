@@ -32,18 +32,73 @@
     <div class="word-card">
         <h2>Bắt đầu phiên</h2>
 
-        <p>Nhấn nút bên dưới để tạo phiên trải nghiệm.</p>
+        <p>
+            Nhấn nút bên dưới để tạo phiên trải nghiệm.
+        </p>
 
         <form asp-controller="Experiment"
               asp-action="Start"
               method="post"
               asp-antiforgery="true">
 
-            <button type="submit" class="btn">
+            <button type="submit"
+                    class="btn">
                 Bắt đầu
             </button>
         </form>
     </div>
+
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <div class="word-card">
+            <h2>Tạo phiên kiểm thử</h2>
+
+            <p>
+                Chọn nhóm cho tài khoản kiểm thử chưa có phiên.
+                Nhóm sẽ được giữ nguyên sau khi tạo.
+            </p>
+
+            <form asp-controller="Experiment"
+                  asp-action="StartTest"
+                  method="post"
+                  asp-antiforgery="true">
+
+                <label for="test-mode"
+                       class="form-label">
+                    Nhóm kiểm thử
+                </label>
+
+                <select id="test-mode"
+                        name="mode"
+                        class="form-select mb-3"
+                        required>
+
+                    <option value="">Chọn nhóm</option>
+
+                    <option value="A">
+                        A — Di chuyển Submit, tự động áp dụng
+                    </option>
+
+                    <option value="B">
+                        B — Di chuyển Submit, hỏi Accept/Reject
+                    </option>
+
+                    <option value="C">
+                        C — Cố định Submit, tự động áp dụng
+                    </option>
+
+                    <option value="D">
+                        D — Cố định Submit, hỏi Accept/Reject
+                    </option>
+                </select>
+
+                <button type="submit"
+                        class="btn secondary">
+                    Tạo phiên kiểm thử
+                </button>
+            </form>
+        </div>
+    }
 }
 else
 {
@@ -51,7 +106,8 @@ else
         <h2>Phiên trải nghiệm của bạn</h2>
 
         <p>
-            <strong>Trạng thái:</strong> @phaseText
+            <strong>Trạng thái:</strong>
+            @phaseText
         </p>
 
         @if (Model.Phase == ExperimentPhase.Familiarisation)
@@ -88,7 +144,9 @@ else
         }
         else if (Model.Phase == ExperimentPhase.Completed)
         {
-            <p>Phiên trải nghiệm đã hoàn thành.</p>
+            <p>
+                Phiên trải nghiệm đã hoàn thành.
+            </p>
 
             <a asp-controller="Dashboard"
                asp-action="Index"
@@ -114,7 +172,9 @@ else
                 <dd>@Model.Phase</dd>
 
                 <dt>Đã áp dụng thay đổi</dt>
-                <dd>@(Model.AdaptationApplied ? "Có" : "Chưa")</dd>
+                <dd>
+                    @(Model.AdaptationApplied ? "Có" : "Chưa")
+                </dd>
 
                 <dt>Quyết định phê duyệt</dt>
                 <dd>
@@ -142,7 +202,8 @@ else
                       method="post"
                       asp-antiforgery="true">
 
-                    <button type="submit" class="btn">
+                    <button type="submit"
+                            class="btn">
                         Kích hoạt adaptation thử
                     </button>
                 </form>
