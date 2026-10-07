@@ -4,35 +4,31 @@ using EnglishLearning.Infrastructure.Data;
 using EnglishLearning.Infrastructure.Identity;
 using EnglishLearning.Infrastructure.Repositories;
 using EnglishLearning.Web.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.DataProtection;
 
-var builder =
-    WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
+
+// Cấu hình nơi lưu khóa Data Protection.
 var dataProtectionKeysPath =
-    builder.Configuration[
-        "DataProtection:KeysPath"];
+    builder.Configuration["DataProtection:KeysPath"];
 
-if (!string.IsNullOrWhiteSpace(
-        dataProtectionKeysPath))
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
 {
-    Directory.CreateDirectory(
-        dataProtectionKeysPath);
+    Directory.CreateDirectory(dataProtectionKeysPath);
 
     builder.Services
         .AddDataProtection()
         .PersistKeysToFileSystem(
-            new DirectoryInfo(
-                dataProtectionKeysPath))
-        .SetApplicationName(
-            "EnglishLearningPlatform");
+            new DirectoryInfo(dataProtectionKeysPath))
+        .SetApplicationName("EnglishLearningPlatform");
 }
 
+// Cấu hình kết nối MySQL.
 var connection =
-    builder.Configuration.GetConnectionString(
-        "DefaultConnection")
+    builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "Thiếu DefaultConnection.");
 
@@ -43,6 +39,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(
             new MySqlServerVersion(
                 new Version(8, 0, 0))));
 
+// Cấu hình tài khoản và phân quyền.
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(
         options =>
@@ -63,6 +60,7 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// Cấu hình cookie đăng nhập.
 builder.Services.ConfigureApplicationCookie(
     options =>
     {
@@ -78,38 +76,36 @@ builder.Services.ConfigureApplicationCookie(
                 ? CookieSecurePolicy.SameAsRequest
                 : CookieSecurePolicy.Always;
 
-        options.ExpireTimeSpan =
-            TimeSpan.FromHours(8);
-
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });
 
+// Đăng ký repository.
 builder.Services.AddScoped<
     ILearningRepository,
     LearningRepository>();
 
+// Đăng ký các service.
+// Các service này dùng chung ApplicationDbContext trong mỗi request.
 builder.Services.AddScoped<QuizService>();
 builder.Services.AddScoped<ExperimentService>();
-builder.Services.AddScoped<
-    VocabularyImportService>();
+builder.Services.AddScoped<ExperimentTaskService>();
+builder.Services.AddScoped<VocabularyImportService>();
 
-builder.Services.AddHttpClient<
-    DictionaryApiService>(
-        client =>
-        {
-            client.BaseAddress =
-                new Uri(
-                    "https://api.dictionaryapi.dev/");
+// Cấu hình API từ điển.
+builder.Services.AddHttpClient<DictionaryApiService>(
+    client =>
+    {
+        client.BaseAddress =
+            new Uri("https://api.dictionaryapi.dev/");
 
-            client.Timeout =
-                TimeSpan.FromSeconds(30);
+        client.Timeout = TimeSpan.FromSeconds(30);
 
-            client.DefaultRequestHeaders
-                .UserAgent
-                .ParseAdd(
-                    "EApp-EnglishLearning/1.0");
-        });
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "EApp-EnglishLearning/1.0");
+    });
 
+// Cấu hình MVC.
 builder.Services.AddControllersWithViews(
     options =>
     {
@@ -127,46 +123,36 @@ var app = builder.Build();
 if (builder.Configuration.GetValue<bool>(
         "Database:MigrateOnStartup"))
 {
-    using var migrationScope =
-        app.Services.CreateScope();
+    using var migrationScope = app.Services.CreateScope();
 
-    var database =
-        migrationScope.ServiceProvider
-            .GetRequiredService<ApplicationDbContext>();
+    var database = migrationScope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
 
     await database.Database.MigrateAsync();
 }
 
-// Đặt lại mật khẩu Admin bằng cấu hình trong .env.
+// Đặt lại mật khẩu Admin từ cấu hình.
 if (args.Contains("--reset-admin-password"))
 {
-    using var resetScope =
-        app.Services.CreateScope();
+    using var resetScope = app.Services.CreateScope();
 
-    var userManager =
-        resetScope.ServiceProvider
-            .GetRequiredService<
-                UserManager<ApplicationUser>>();
+    var userManager = resetScope.ServiceProvider
+        .GetRequiredService<UserManager<ApplicationUser>>();
 
     var adminEmail =
-        builder.Configuration[
-            "Seed:AdminEmail"];
+        builder.Configuration["Seed:AdminEmail"];
 
     var adminPassword =
-        builder.Configuration[
-            "Seed:AdminPassword"];
+        builder.Configuration["Seed:AdminPassword"];
 
     if (string.IsNullOrWhiteSpace(adminEmail) ||
         string.IsNullOrWhiteSpace(adminPassword))
     {
         throw new InvalidOperationException(
-            "Thiếu Seed:AdminEmail hoặc " +
-            "Seed:AdminPassword.");
+            "Thiếu Seed:AdminEmail hoặc Seed:AdminPassword.");
     }
 
-    var admin =
-        await userManager.FindByEmailAsync(
-            adminEmail);
+    var admin = await userManager.FindByEmailAsync(adminEmail);
 
     if (admin is null)
     {
@@ -175,23 +161,19 @@ if (args.Contains("--reset-admin-password"))
     }
 
     var resetToken =
-        await userManager
-            .GeneratePasswordResetTokenAsync(
-                admin);
+        await userManager.GeneratePasswordResetTokenAsync(admin);
 
-    var resetResult =
-        await userManager.ResetPasswordAsync(
-            admin,
-            resetToken,
-            adminPassword);
+    var resetResult = await userManager.ResetPasswordAsync(
+        admin,
+        resetToken,
+        adminPassword);
 
     if (!resetResult.Succeeded)
     {
-        var errors =
-            string.Join(
-                "; ",
-                resetResult.Errors.Select(
-                    error => error.Description));
+        var errors = string.Join(
+            "; ",
+            resetResult.Errors.Select(
+                error => error.Description));
 
         throw new InvalidOperationException(
             $"Không thể đặt lại mật khẩu: {errors}");
@@ -201,8 +183,7 @@ if (args.Contains("--reset-admin-password"))
         admin,
         null);
 
-    await userManager
-        .ResetAccessFailedCountAsync(admin);
+    await userManager.ResetAccessFailedCountAsync(admin);
 
     Console.WriteLine(
         $"Đã đặt lại mật khẩu cho {adminEmail}.");
@@ -213,27 +194,21 @@ if (args.Contains("--reset-admin-password"))
 // Tạo roles, Admin và nội dung demo.
 if (args.Contains("--seed"))
 {
-    using var seedScope =
-        app.Services.CreateScope();
+    using var seedScope = app.Services.CreateScope();
 
     await DbSeeder.SeedAsync(
         seedScope.ServiceProvider
-            .GetRequiredService<
-                ApplicationDbContext>(),
+            .GetRequiredService<ApplicationDbContext>(),
 
         seedScope.ServiceProvider
-            .GetRequiredService<
-                RoleManager<IdentityRole>>(),
+            .GetRequiredService<RoleManager<IdentityRole>>(),
 
         seedScope.ServiceProvider
-            .GetRequiredService<
-                UserManager<ApplicationUser>>(),
+            .GetRequiredService<UserManager<ApplicationUser>>(),
 
-        builder.Configuration[
-            "Seed:AdminEmail"],
+        builder.Configuration["Seed:AdminEmail"],
 
-        builder.Configuration[
-            "Seed:AdminPassword"],
+        builder.Configuration["Seed:AdminPassword"],
 
         builder.Configuration.GetValue<bool>(
             "Seed:DemoContent"));
@@ -241,12 +216,15 @@ if (args.Contains("--seed"))
     return;
 }
 
-if (!app.Environment.IsDevelopment())
+// Cấu hình xử lý lỗi theo môi trường.
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
-
     app.UseHsts();
-
     app.UseHttpsRedirection();
 }
 
@@ -254,24 +232,22 @@ if (!app.Environment.IsDevelopment())
 app.Use(
     async (context, next) =>
     {
-        context.Response.Headers[
-            "X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["X-Content-Type-Options"] =
+            "nosniff";
 
-        context.Response.Headers[
-            "X-Frame-Options"] = "DENY";
+        context.Response.Headers["X-Frame-Options"] =
+            "DENY";
 
-        context.Response.Headers[
-            "Referrer-Policy"] =
+        context.Response.Headers["Referrer-Policy"] =
             "strict-origin-when-cross-origin";
 
-        context.Response.Headers[
-            "Permissions-Policy"] =
+        context.Response.Headers["Permissions-Policy"] =
             "camera=(), microphone=(), geolocation=()";
 
         await next();
     });
 
-// Hiển thị trang lỗi thân thiện.
+// Hiển thị trang lỗi HTTP thân thiện.
 app.UseStatusCodePagesWithReExecute(
     "/Home/HttpStatus",
     "?code={0}");
@@ -287,20 +263,18 @@ app.UseAuthorization();
 // Health Check cho website và database.
 app.MapGet(
         "/health",
-        async Task<IResult>(
+        async Task<IResult> (
             ApplicationDbContext database) =>
         {
             try
             {
                 var canConnect =
-                    await database.Database
-                        .CanConnectAsync();
+                    await database.Database.CanConnectAsync();
 
                 if (!canConnect)
                 {
                     return Results.StatusCode(
-                        StatusCodes
-                            .Status503ServiceUnavailable);
+                        StatusCodes.Status503ServiceUnavailable);
                 }
 
                 return Results.Ok(
@@ -312,16 +286,15 @@ app.MapGet(
             catch
             {
                 return Results.StatusCode(
-                    StatusCodes
-                        .Status503ServiceUnavailable);
+                    StatusCodes.Status503ServiceUnavailable);
             }
         })
     .AllowAnonymous();
 
+// Route mặc định.
 app.MapControllerRoute(
     name: "default",
-    pattern:
-        "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
 
