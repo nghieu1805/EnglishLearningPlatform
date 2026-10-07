@@ -50,12 +50,13 @@ public class ApplicationDbContext(
 
     public DbSet<ExperimentSession> ExperimentSessions =>
         Set<ExperimentSession>();
-
+    public DbSet<ExperimentTask> ExperimentTasks =>
+    Set<ExperimentTask>();
     protected override void OnModelCreating(
         ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
+        ConfigureExperimentTask(builder);
         ConfigureGrade(builder);
         ConfigureTopic(builder);
         ConfigureTopicSource(builder);
@@ -241,5 +242,43 @@ public class ApplicationDbContext(
         builder.Entity<ExperimentSession>()
             .Property(session => session.Phase)
             .HasConversion<int>();
+ 
+    }
+    private static void ConfigureExperimentTask(
+    ModelBuilder builder)
+    {
+        var entity = builder.Entity<ExperimentTask>();
+
+        entity.Property(task => task.Phase)
+            .HasConversion<int>();
+
+        entity.HasIndex(task => task.AttemptToken)
+            .IsUnique();
+
+        entity.HasIndex(task => new
+        {
+            task.ExperimentSessionId,
+            task.Phase,
+            task.TaskNumber
+        })
+            .IsUnique();
+
+        entity.HasIndex(task => task.QuizAttemptId)
+            .IsUnique();
+
+        entity.HasOne(task => task.ExperimentSession)
+            .WithMany()
+            .HasForeignKey(task => task.ExperimentSessionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(task => task.Exercise)
+            .WithMany()
+            .HasForeignKey(task => task.ExerciseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(task => task.QuizAttempt)
+            .WithMany()
+            .HasForeignKey(task => task.QuizAttemptId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
