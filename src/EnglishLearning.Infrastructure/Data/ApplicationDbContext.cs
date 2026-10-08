@@ -23,7 +23,8 @@ public class ApplicationDbContext(
 
     public DbSet<VocabularyExample> VocabularyExamples =>
         Set<VocabularyExample>();
-
+    public DbSet<ExperimentSurvey> ExperimentSurveys =>
+    Set<ExperimentSurvey>();
     public DbSet<VocabularyAudio> VocabularyAudios =>
         Set<VocabularyAudio>();
 
@@ -47,7 +48,24 @@ public class ApplicationDbContext(
 
     public DbSet<StudyHistory> StudyHistories =>
         Set<StudyHistory>();
+    private static void ConfigureExperimentSurvey(
+    ModelBuilder builder)
+    {
+        builder.Entity<ExperimentSurvey>(entity =>
+        {
+            entity.HasIndex(survey => survey.ExperimentSessionId)
+                .IsUnique();
 
+            entity.HasOne(survey => survey.ExperimentSession)
+                .WithOne()
+                .HasForeignKey<ExperimentSurvey>(
+                    survey => survey.ExperimentSessionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(survey => survey.Comment)
+                .HasMaxLength(2000);
+        });
+    }
     public DbSet<ExperimentSession> ExperimentSessions =>
         Set<ExperimentSession>();
     public DbSet<ExperimentTask> ExperimentTasks =>
@@ -56,6 +74,7 @@ public class ApplicationDbContext(
         ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        ConfigureExperimentSurvey(builder);
         ConfigureExperimentTask(builder);
         ConfigureGrade(builder);
         ConfigureTopic(builder);

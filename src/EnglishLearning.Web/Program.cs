@@ -31,7 +31,7 @@ var connection =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "Thiếu DefaultConnection.");
-
+builder.Services.AddScoped<ExperimentSurveyService>();
 builder.Services.AddDbContext<ApplicationDbContext>(
     options =>
         options.UseMySql(

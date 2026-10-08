@@ -1,0 +1,165 @@
+﻿@model EnglishLearning.Web.ViewModels.ExperimentSurveyViewModel
+
+@{
+    ViewData["Title"] = "Khảo sát sau trải nghiệm";
+}
+
+<div class="section-heading">
+    <div>
+        <h1>Khảo sát sau trải nghiệm</h1>
+
+        <p>
+            Hãy đánh giá dựa trên phiên trải nghiệm vừa hoàn thành.
+            Không có câu trả lời đúng hoặc sai.
+        </p>
+    </div>
+</div>
+
+<div class="word-card">
+    <p>
+        Chọn một mức cho mỗi câu:
+    </p>
+
+    <ol>
+        <li>Hoàn toàn không đồng ý</li>
+        <li>Không đồng ý</li>
+        <li>Trung lập</li>
+        <li>Đồng ý</li>
+        <li>Hoàn toàn đồng ý</li>
+    </ol>
+
+    <p>
+        Mỗi phiên chỉ gửi khảo sát một lần.
+        Vui lòng kiểm tra câu trả lời trước khi gửi.
+    </p>
+</div>
+
+<form asp-controller="ExperimentSurvey"
+      asp-action="Index"
+      method="post"
+      asp-antiforgery="true">
+
+    <div asp-validation-summary="All"
+         class="text-danger"
+         role="alert">
+    </div>
+
+    <div class="word-card">
+        <label asp-for="PredictabilityRating"
+               class="form-label">
+            1. Tôi dễ dự đoán vị trí của các chức năng
+            khi sử dụng giao diện.
+        </label>
+
+        <select asp-for="PredictabilityRating"
+                class="form-select"
+                required>
+            <option value="">— Chọn mức đánh giá —</option>
+            <option value="1">1 — Hoàn toàn không đồng ý</option>
+            <option value="2">2 — Không đồng ý</option>
+            <option value="3">3 — Trung lập</option>
+            <option value="4">4 — Đồng ý</option>
+            <option value="5">5 — Hoàn toàn đồng ý</option>
+        </select>
+
+        <span asp-validation-for="PredictabilityRating"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="word-card">
+        <label asp-for="SubmitFindabilityRating"
+               class="form-label">
+            2. Tôi dễ tìm thấy nút nộp bài khi cần.
+        </label>
+
+        <select asp-for="SubmitFindabilityRating"
+                class="form-select"
+                required>
+            <option value="">— Chọn mức đánh giá —</option>
+            <option value="1">1 — Hoàn toàn không đồng ý</option>
+            <option value="2">2 — Không đồng ý</option>
+            <option value="3">3 — Trung lập</option>
+            <option value="4">4 — Đồng ý</option>
+            <option value="5">5 — Hoàn toàn đồng ý</option>
+        </select>
+
+        <span asp-validation-for="SubmitFindabilityRating"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="word-card">
+        <label asp-for="LayoutSatisfactionRating"
+               class="form-label">
+            3. Tôi hài lòng với cách bố trí giao diện
+            trong phiên trải nghiệm.
+        </label>
+
+        <select asp-for="LayoutSatisfactionRating"
+                class="form-select"
+                required>
+            <option value="">— Chọn mức đánh giá —</option>
+            <option value="1">1 — Hoàn toàn không đồng ý</option>
+            <option value="2">2 — Không đồng ý</option>
+            <option value="3">3 — Trung lập</option>
+            <option value="4">4 — Đồng ý</option>
+            <option value="5">5 — Hoàn toàn đồng ý</option>
+        </select>
+
+        <span asp-validation-for="LayoutSatisfactionRating"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="word-card">
+        <label asp-for="OverallSatisfactionRating"
+               class="form-label">
+            4. Tôi hài lòng với trải nghiệm thực hiện
+            và nộp bài.
+        </label>
+
+        <select asp-for="OverallSatisfactionRating"
+                class="form-select"
+                required>
+            <option value="">— Chọn mức đánh giá —</option>
+            <option value="1">1 — Hoàn toàn không đồng ý</option>
+            <option value="2">2 — Không đồng ý</option>
+            <option value="3">3 — Trung lập</option>
+            <option value="4">4 — Đồng ý</option>
+            <option value="5">5 — Hoàn toàn đồng ý</option>
+        </select>
+
+        <span asp-validation-for="OverallSatisfactionRating"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="word-card">
+        <label asp-for="Comment"
+               class="form-label">
+        </label>
+
+        <textarea asp-for="Comment"
+                  class="form-control"
+                  rows="4"
+                  maxlength="2000">
+        </textarea>
+
+        <span asp-validation-for="Comment"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="actions">
+        <button type="submit" class="btn">
+            Gửi khảo sát
+        </button>
+
+        <a asp-controller="Experiment"
+           asp-action="Index"
+           class="btn secondary">
+            Quay lại
+        </a>
+    </div>
+</form>
