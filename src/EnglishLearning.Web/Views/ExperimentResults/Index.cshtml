@@ -1,0 +1,223 @@
+﻿@model System.Collections.Generic.List<EnglishLearning.Web.ViewModels.ExperimentResultViewModel>
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Kết quả trải nghiệm";
+
+    string selectedMode =
+        ViewData["SelectedMode"] as string ?? "";
+
+    int completedCount =
+        Model.Count(item => item.MeasurementCompleted);
+
+    int surveyCount =
+        Model.Count(item => item.SurveySubmitted);
+}
+
+<div class="section-heading">
+    <div>
+        <h1>Kết quả trải nghiệm</h1>
+
+        <p>
+            Mỗi dòng là một phiên.
+            Thời gian và thao tác lấy từ quiz đo lường.
+        </p>
+    </div>
+</div>
+
+<div class="word-card">
+    <form asp-controller="ExperimentResults"
+          asp-action="Index"
+          method="get">
+
+        <div class="d-flex flex-wrap align-items-end gap-3">
+            <div>
+                <label for="mode" class="form-label">
+                    Cấu hình
+                </label>
+
+                <select id="mode"
+                        name="mode"
+                        class="form-select">
+                    <option value=""
+                            selected="@(selectedMode == "")">
+                        Tất cả
+                    </option>
+
+                    @foreach (string mode in new[] { "A", "B", "C", "D" })
+                    {
+                        <option value="@mode"
+                                selected="@(selectedMode == mode)">
+                            Nhóm @mode
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn">
+                Lọc kết quả
+            </button>
+
+            <a asp-controller="ExperimentResults"
+               asp-action="ExportCsv"
+               asp-route-mode="@selectedMode"
+               class="btn secondary">
+                Xuất CSV
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="word-card">
+    <div class="d-flex flex-wrap gap-4">
+        <span>
+            <strong>Số phiên:</strong> @Model.Count
+        </span>
+
+        <span>
+            <strong>Hoàn thành quiz đo lường:</strong>
+            @completedCount
+        </span>
+
+        <span>
+            <strong>Đã gửi khảo sát:</strong>
+            @surveyCount
+        </span>
+    </div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="word-card">
+        <p>Chưa có phiên trải nghiệm phù hợp.</p>
+    </div>
+}
+else
+{
+    <div class="word-card">
+        <p id="results-description">
+            Dấu “—” nghĩa là chưa có dữ liệu.
+            Thời gian hiển thị bằng giây.
+            Điểm khảo sát từ 1 đến 5.
+        </p>
+
+        <div class="table-responsive"
+             role="region"
+             aria-label="Bảng kết quả trải nghiệm"
+             tabindex="0">
+
+            <table class="table table-striped align-middle"
+                   aria-describedby="results-description">
+                <thead>
+                    <tr>
+                        <th scope="col">Mã</th>
+                        <th scope="col">Nhóm</th>
+                        <th scope="col">Giai đoạn</th>
+                        <th scope="col">Phê duyệt</th>
+                        <th scope="col">Áp dụng thay đổi</th>
+                        <th scope="col">Nút nộp</th>
+                        <th scope="col">Quiz đo lường</th>
+                        <th scope="col">Tổng thời gian (s)</th>
+                        <th scope="col">Đủ đáp án → nộp (s)</th>
+                        <th scope="col">Bấm vị trí cũ</th>
+                        <th scope="col">Nộp thiếu</th>
+                        <th scope="col">P1</th>
+                        <th scope="col">P2</th>
+                        <th scope="col">S1</th>
+                        <th scope="col">S2</th>
+                        <th scope="col">Khảo sát</th>
+                        <th scope="col">Góp ý</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <th scope="row">
+                                @item.ParticipantCode
+                            </th>
+
+                            <td>@item.Mode</td>
+                            <td>@item.PhaseText</td>
+                            <td>@item.ApprovalText</td>
+
+                            <td>
+                                @(item.AdaptationApplied ? "Có" : "Không")
+                            </td>
+
+                            <td>
+                                @(item.SubmitMoved.HasValue
+                                                        ? (item.SubmitMoved.Value
+                                                        ? "Trên"
+                                                        : "Dưới")
+                                                        : "—")
+                                                          </td>
+
+                            <td>
+                                @(item.MeasurementTaskId.HasValue
+                                                        ? (item.MeasurementCompleted
+                                                        ? "Hoàn thành"
+                                                        : "Đang thực hiện")
+                                                        : "Chưa bắt đầu")
+                                                                     </td>
+
+                            <td>
+                                @(item.DurationSeconds?.ToString(
+                                                        "0.000",
+                                                        CultureInfo.InvariantCulture) ?? "—")
+                                                                                         </td>
+
+                            <td>
+                                @(item.TimeToSubmitSeconds?.ToString(
+                                                        "0.000",
+                                                        CultureInfo.InvariantCulture) ?? "—")
+                                                                                         </td>
+
+                            <td>
+                                @(item.OldSubmitLocationClickCount?.ToString() ?? "—")
+                            </td>
+
+                            <td>
+                                @(item.IncompleteSubmitCount?.ToString() ?? "—")
+                            </td>
+
+                            <td>
+                                @(item.PredictabilityRating?.ToString() ?? "—")
+                            </td>
+
+                            <td>
+                                @(item.SubmitFindabilityRating?.ToString() ?? "—")
+                            </td>
+
+                            <td>
+                                @(item.LayoutSatisfactionRating?.ToString() ?? "—")
+                            </td>
+
+                            <td>
+                                @(item.OverallSatisfactionRating?.ToString() ?? "—")
+                            </td>
+
+                            <td>
+                                @(item.SurveySubmitted ? "Đã gửi" : "Chưa gửi")
+                            </td>
+
+                            <td style="min-width: 180px; overflow-wrap: anywhere;">
+                                @(string.IsNullOrWhiteSpace(item.Comment)
+                                                        ? "—"
+                                                        : item.Comment)
+                    </td>
+                </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="mt-3">
+            <strong>P1:</strong> Dễ dự đoán vị trí chức năng.
+            <strong>P2:</strong> Dễ tìm nút nộp.
+            <strong>S1:</strong> Hài lòng với bố cục.
+            <strong>S2:</strong> Hài lòng với trải nghiệm.
+        </p>
+    </div>
+}

@@ -32,6 +32,7 @@ var connection =
     ?? throw new InvalidOperationException(
         "Thiếu DefaultConnection.");
 builder.Services.AddScoped<ExperimentSurveyService>();
+builder.Services.AddScoped<ExperimentResultService>();
 builder.Services.AddDbContext<ApplicationDbContext>(
     options =>
         options.UseMySql(
