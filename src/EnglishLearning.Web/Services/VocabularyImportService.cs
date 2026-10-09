@@ -198,8 +198,18 @@ public class VocabularyImportService(
 
             while (await csv.ReadAsync())
             {
-                int rowNumber =
-                    (int)csv.Context.Parser.Row;
+                var parser = csv.Context.Parser;
+
+                if (parser is null)
+                {
+                    AddGeneralError(
+                        result,
+                        "Không thể xác định dòng dữ liệu trong file CSV.");
+
+                    return;
+                }
+
+                int rowNumber = parser.Row;
 
                 var data =
                     new VocabularyImportCsvRow
