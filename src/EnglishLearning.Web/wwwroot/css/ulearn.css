@@ -1,0 +1,1343 @@
+﻿/* ULEARN homepage — Mobile First. Scoped to avoid affecting experiment pages. */
+.ulearn-home {
+    --u-deep: #103f30;
+    --u-green: #116f43;
+    --u-lime: #a8d82a;
+    --u-yellow: #ffda52;
+    --u-text: #143b2d;
+    --u-soft: #f8fbeb;
+    color: var(--u-text)
+}
+
+.ulearn-hero {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin: 0 -18px;
+    padding: 52px 18px 46px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 8% 0%,#fff9c9 0,transparent 48%),linear-gradient(125deg,#fffdf2 10%,#e8f5d9 66%,#d7edcf 100%);
+    border-radius: 0 0 30px 30px
+}
+
+    .ulearn-hero:before, .ulearn-hero:after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        border-radius: 50%;
+        pointer-events: none
+    }
+
+    .ulearn-hero:before {
+        width: 340px;
+        height: 180px;
+        left: -120px;
+        bottom: -105px;
+        background: #b7d78380;
+        transform: rotate(-12deg)
+    }
+
+    .ulearn-hero:after {
+        width: 400px;
+        height: 180px;
+        right: -110px;
+        bottom: -135px;
+        background: #80bf77a1;
+        transform: rotate(-18deg)
+    }
+
+.ulearn-eyebrow {
+    font-size: 11px;
+    letter-spacing: .15em;
+    color: #608f2d;
+    font-weight: 800;
+    margin: 0 0 18px;
+    text-transform: uppercase
+}
+
+.ulearn-hero h1 {
+    font-size: clamp(35px,8vw,67px);
+    line-height: 1.12;
+    letter-spacing: -.045em;
+    font-weight: 800;
+    color: #102d24;
+    margin: 0 0 23px
+}
+
+    .ulearn-hero h1 span {
+        color: #408c13
+    }
+
+.ulearn-lead {
+    font-size: 15px;
+    line-height: 1.8;
+    max-width: 580px;
+    color: #43574d;
+    margin: 0 0 26px
+}
+
+.ulearn-primary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    min-height: 52px;
+    padding: 12px 23px;
+    background: linear-gradient(120deg,#0d7846,#07532f);
+    color: white !important;
+    border-radius: 14px;
+    font-weight: 800;
+    box-shadow: 0 12px 22px #12644228;
+    text-decoration: none !important
+}
+
+    .ulearn-primary-action:hover {
+        filter: brightness(1.06);
+        transform: translateY(-1px)
+    }
+
+.ulearn-hero-art {
+    min-height: 320px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+
+.ulearn-illustration-card {
+    position: relative;
+    z-index: 2;
+    background: #fffdf0;
+    box-shadow: 0 22px 55px #184b342b;
+    border: 1px solid #ffffffce;
+    width: min(100%,520px);
+    min-height: 290px;
+    border-radius: 28px;
+    padding: 20px;
+    transform: rotate(-2deg)
+}
+
+.ulearn-art-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #176e40;
+    font-size: 21px;
+    letter-spacing: -.04em
+}
+
+.ulearn-art-mark {
+    font-size: 27px
+}
+
+.ulearn-art-body {
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    gap: 14px;
+    margin-top: 18px
+}
+
+.ulearn-art-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    font-size: 10px;
+    color: #617264
+}
+
+    .ulearn-art-nav span {
+        padding: 7px 5px
+    }
+
+    .ulearn-art-nav .active {
+        background: #e8f4b7;
+        border-radius: 9px;
+        font-weight: 700;
+        color: #185a38
+    }
+
+.ulearn-art-message {
+    position: relative;
+    min-height: 216px;
+    border-radius: 20px;
+    background: linear-gradient(140deg,#fff4c6,#f0f9d5);
+    padding: 19px;
+    overflow: hidden
+}
+
+    .ulearn-art-message strong {
+        display: block;
+        font-size: clamp(24px,5vw,36px);
+        line-height: 1.29;
+        color: #125a36;
+        font-weight: 800;
+        letter-spacing: -.04em
+    }
+
+    .ulearn-art-message small {
+        display: block;
+        margin-top: 12px;
+        max-width: 160px;
+        font-size: 10px;
+        line-height: 1.5;
+        color: #527053
+    }
+
+.ulearn-art-book {
+    position: absolute;
+    right: 10px;
+    bottom: 0;
+    font-size: 63px
+}
+
+    .ulearn-art-book span {
+        font-size: 52px;
+        position: absolute;
+        right: 0;
+        top: -32px
+    }
+
+.ulearn-art-leaf {
+    position: absolute;
+    display: block;
+    background: #81bc60;
+    border-radius: 90% 0 90% 0;
+    z-index: 1
+}
+
+.leaf-one {
+    width: 70px;
+    height: 125px;
+    right: 0;
+    top: 0;
+    transform: rotate(25deg)
+}
+
+.leaf-two {
+    width: 48px;
+    height: 90px;
+    left: 5px;
+    bottom: 0;
+    transform: rotate(-32deg)
+}
+
+.ulearn-grades {
+    padding: 42px 0 10px
+}
+
+.ulearn-section-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 24px
+}
+
+    .ulearn-section-title .ulearn-eyebrow {
+        margin-bottom: 7px
+    }
+
+    .ulearn-section-title h2 {
+        font-size: clamp(28px,5vw,36px);
+        margin: 0;
+        color: #103e2e
+    }
+
+    .ulearn-section-title > span {
+        font-size: 13px;
+        color: #667467
+    }
+
+.ulearn-level-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px
+}
+
+.ulearn-level-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 19px;
+    border-radius: 18px;
+    min-height: 103px;
+    background: #fff8dc;
+    border: 1px solid #f6ebc3;
+    box-shadow: 0 12px 25px #1c4b2a0c;
+    text-decoration: none !important;
+    color: #174933 !important
+}
+
+    .ulearn-level-card:nth-child(2) {
+        background: #f1f8e5;
+        border-color: #e3efce
+    }
+
+    .ulearn-level-card:nth-child(3) {
+        background: #e8f7ef;
+        border-color: #d7eddf
+    }
+
+    .ulearn-level-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 30px #174d2521
+    }
+
+.ulearn-level-icon {
+    font-size: 34px;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    flex: 0 0 56px
+}
+
+.ulearn-level-copy {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0
+}
+
+    .ulearn-level-copy strong {
+        font-size: 16px
+    }
+
+    .ulearn-level-copy small {
+        font-size: 11px;
+        color: #59695b
+    }
+
+.ulearn-level-arrow {
+    background: #d9f0bd;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 35px
+}
+
+.ulearn-grade-section {
+    padding-top: 31px;
+    scroll-margin-top: 90px
+}
+
+    .ulearn-grade-section h3 {
+        font-size: 19px;
+        margin: 0 0 16px;
+        color: #124b34
+    }
+
+.ulearn-class-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 12px
+}
+
+.ulearn-class-card {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    background: white;
+    border: 1px solid #e2e9d9;
+    border-radius: 14px;
+    padding: 18px;
+    text-decoration: none !important;
+    color: #144b35 !important;
+    box-shadow: 0 5px 15px #123b210b
+}
+
+    .ulearn-class-card:hover {
+        background: #f3f9e9;
+        border-color: #bad698
+    }
+
+    .ulearn-class-card small {
+        font-size: 10px;
+        letter-spacing: .08em;
+        color: #6a876b
+    }
+
+    .ulearn-class-card strong {
+        font-size: 21px
+    }
+
+    .ulearn-class-card > span {
+        font-size: 11px;
+        color: #4e7355
+    }
+
+.ulearn-content-note {
+    font-size: 12px;
+    color: #657465;
+    background: #edf4e5;
+    padding: 15px 17px;
+    border-radius: 12px;
+    margin-top: 35px
+}
+
+@media(min-width:620px) {
+    .ulearn-level-grid {
+        grid-template-columns: repeat(3,minmax(0,1fr))
+    }
+
+    .ulearn-level-card {
+        padding: 15px;
+        gap: 8px
+    }
+
+    .ulearn-level-icon {
+        font-size: 30px;
+        flex-basis: 42px;
+        width: 42px
+    }
+
+    .ulearn-level-copy strong {
+        font-size: 14px
+    }
+
+    .ulearn-class-grid {
+        grid-template-columns: repeat(3,minmax(0,1fr))
+    }
+}
+
+@media(min-width:900px) {
+    .ulearn-hero {
+        align-items: center;
+        padding: 78px 56px 70px;
+        margin: 0 -28px;
+        border-radius: 0 0 34px 34px
+    }
+
+    .ulearn-hero-art {
+        min-height: 400px
+    }
+
+    .ulearn-lead {
+        font-size: 16px
+    }
+
+    .ulearn-illustration-card {
+        padding: 27px;
+        min-height: 348px
+    }
+
+    .ulearn-art-body {
+        grid-template-columns: 122px 1fr
+    }
+
+    .ulearn-art-message {
+        min-height: 260px;
+        padding: 25px
+    }
+
+        .ulearn-art-message strong {
+            font-size: 38px
+        }
+
+    .ulearn-grades {
+        padding-top: 48px
+    }
+
+    .ulearn-level-card {
+        padding: 20px
+    }
+
+    .ulearn-level-icon {
+        font-size: 36px;
+        flex-basis: 55px;
+        width: 55px
+    }
+
+    .ulearn-level-copy strong {
+        font-size: 16px
+    }
+
+    .ulearn-class-grid {
+        grid-template-columns: repeat(5,minmax(0,1fr))
+    }
+}
+
+@media(prefers-reduced-motion:reduce) {
+    .ulearn-primary-action:hover, .ulearn-level-card:hover {
+        transform: none
+    }
+}
+/* Site-wide brand/header, mobile first; keep experimental menu ordering as supplied by Razor. */
+.ulearn-site-header {
+    background: #fff;
+    border-bottom: 1px solid #e5ecd9
+}
+
+.ulearn-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    min-height: 76px;
+    gap: 14px;
+    justify-content: space-between;
+    position: relative
+}
+
+.ulearn-brand {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    column-gap: 7px;
+    font-size: 26px;
+    line-height: 1;
+    color: #145a39 !important;
+    white-space: nowrap;
+    text-decoration: none !important
+}
+
+.ulearn-brand-icon {
+    grid-row: 1 / 3;
+    font-size: 33px
+}
+
+.ulearn-brand-name {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -.04em;
+    color: #145c39
+}
+
+.ulearn-brand small {
+    font-size: 7px;
+    letter-spacing: .06em;
+    margin-top: 4px;
+    font-weight: 600;
+    color: #697c65
+}
+
+.ulearn-menu > summary {
+    list-style: none;
+    border: 1px solid #d8e5d4;
+    border-radius: 10px;
+    background: #f7fbf0;
+    padding: 9px 12px;
+    color: #15593b;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px
+}
+
+    .ulearn-menu > summary::-webkit-details-marker {
+        display: none
+    }
+
+.ulearn-menu .nav-links {
+    position: absolute;
+    top: calc(100% - 2px);
+    right: 18px;
+    left: 18px;
+    z-index: 40;
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e0ead9;
+    border-radius: 15px;
+    box-shadow: 0 18px 44px #18382320
+}
+
+.ulearn-menu:not([open]) .nav-links {
+    display: none
+}
+
+.ulearn-menu .nav-links > a {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #20513b;
+    text-decoration: none
+}
+
+    .ulearn-menu .nav-links > a:hover {
+        background: #f0f7e4
+    }
+
+.ulearn-menu .nav-links > .btn {
+    background: #116e42;
+    color: white !important;
+    text-align: center;
+    border-radius: 10px;
+    margin-top: 5px
+}
+
+.ulearn-menu .nav-links form {
+    margin: 6px 0 0
+}
+
+    .ulearn-menu .nav-links form .btn {
+        width: 100%
+    }
+
+.ulearn-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #687669
+}
+
+    .ulearn-footer span {
+        float: none
+    }
+
+@media(min-width:990px) {
+    .ulearn-nav {
+        min-height: 90px
+    }
+
+    .ulearn-brand-name {
+        font-size: 31px
+    }
+
+    .ulearn-brand small {
+        font-size: 8px
+    }
+
+    .ulearn-menu {
+        flex: 1
+    }
+
+        .ulearn-menu > summary {
+            display: none
+        }
+
+        .ulearn-menu .nav-links, .ulearn-menu:not([open]) .nav-links {
+            position: static;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            border: 0;
+            background: none;
+            box-shadow: none;
+            padding: 0;
+            gap: 8px
+        }
+
+            .ulearn-menu .nav-links > a {
+                padding: 10px 9px;
+                font-size: 12px
+            }
+
+            .ulearn-menu .nav-links > .btn {
+                margin: 0;
+                padding: 10px 15px
+            }
+
+            .ulearn-menu .nav-links form {
+                margin: 0
+            }
+
+                .ulearn-menu .nav-links form .btn {
+                    width: auto
+                }
+}
+/* Nút đăng nhập */
+.ulearn-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 22px;
+    background: #ffffff;
+    border: 1px solid #b7d6c4;
+    border-radius: 12px;
+    color: #17633c;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+    .ulearn-login:hover {
+        background: #eef8ef;
+        color: #10532e;
+        text-decoration: none;
+    }
+
+/* Nút bắt đầu học */
+.ulearn-start {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 22px;
+    background: #08713e;
+    border: 1px solid #08713e;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+    .ulearn-start:hover {
+        background: #075a33;
+        color: white;
+    }
+
+/* Mobile First */
+@media (max-width: 767px) {
+    .ulearn-login,
+    .ulearn-start {
+        width: 100%;
+        min-height: 48px;
+    }
+}
+/* Header fix: always show desktop navigation even when <details> is closed. */
+.ulearn-site-header {
+    display: block;
+    visibility: visible;
+    position: relative;
+    z-index: 100;
+}
+
+    .ulearn-site-header .ulearn-nav {
+        display: flex;
+        align-items: center;
+    }
+
+    .ulearn-site-header .ulearn-login {
+        border: 1px solid #b7d6c4;
+        border-radius: 12px;
+    }
+
+    .ulearn-site-header .ulearn-start {
+        background: #08713e;
+        color: white !important;
+    }
+
+@media (max-width:989px) {
+    .ulearn-site-header .ulearn-menu {
+        margin-left: auto;
+    }
+
+        .ulearn-site-header .ulearn-menu:not([open]) .nav-links {
+            display: none;
+        }
+
+        .ulearn-site-header .ulearn-menu[open] .nav-links {
+            display: flex;
+        }
+
+    .ulearn-site-header .nav-links .ulearn-login,
+    .ulearn-site-header .nav-links .ulearn-start {
+        width: 100%;
+        justify-content: center;
+        margin: 5px 0;
+    }
+}
+
+@media (min-width:990px) {
+    .ulearn-site-header .ulearn-menu {
+        flex: 1;
+    }
+
+        .ulearn-site-header .ulearn-menu .nav-links,
+        .ulearn-site-header .ulearn-menu:not([open]) .nav-links {
+            display: flex !important;
+            position: static;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .ulearn-site-header .ulearn-menu > summary {
+            display: none;
+        }
+}
+/* Header ULEARN trên màn hình máy tính */
+@media (min-width: 990px) {
+    .ulearn-site-header .ulearn-menu {
+        display: block;
+        flex: 1;
+    }
+
+        .ulearn-site-header .ulearn-menu > summary {
+            display: none;
+        }
+
+        .ulearn-site-header .ulearn-menu .nav-links,
+        .ulearn-site-header .ulearn-menu:not([open]) .nav-links {
+            display: flex;
+            position: static;
+            visibility: visible;
+            opacity: 1;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            background: transparent;
+            box-shadow: none;
+            border: 0;
+        }
+}
+
+/* Nút đăng nhập */
+.ulearn-menu .nav-links > .ulearn-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 20px;
+    border: 1px solid #b7d6c4;
+    border-radius: 12px;
+    background: white;
+    color: #17633c;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* Nút bắt đầu học */
+.ulearn-menu .nav-links > .ulearn-start {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 20px;
+    border-radius: 12px;
+    background: #08713e;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+@media (max-width: 989px) {
+    .ulearn-menu .nav-links > .ulearn-login,
+    .ulearn-menu .nav-links > .ulearn-start {
+        width: 100%;
+    }
+}
+/* ===== ULEARN HEADER FIX ===== */
+
+/* Header luôn hiển thị */
+.ulearn-site-header {
+    display: block;
+    width: 100%;
+    background: #ffffff;
+    position: relative;
+    z-index: 1000;
+}
+
+.ulearn-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Desktop: luôn hiện menu */
+@media (min-width: 990px) {
+
+    .ulearn-menu {
+        display: block;
+        flex: 1;
+    }
+
+        .ulearn-menu > summary {
+            display: none;
+        }
+
+        .ulearn-menu .nav-links,
+        .ulearn-menu:not([open]) .nav-links {
+            display: flex !important;
+            position: static !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+}
+
+/* Đăng nhập */
+.ulearn-menu .ulearn-login {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 20px;
+    background: #ffffff;
+    color: #17633c !important;
+    border: 1px solid #b7d6c4;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* Bắt đầu học */
+.ulearn-menu .ulearn-start {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 20px;
+    background: #08713e !important;
+    color: #ffffff !important;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+/* =====================================
+   ULEARN - DESKTOP HEADER FIX
+   ===================================== */
+
+@media screen and (min-width: 990px) {
+
+    .ulearn-site-header .ulearn-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        gap: 24px;
+    }
+
+    .ulearn-site-header .ulearn-menu {
+        display: block;
+        flex: 1;
+        min-width: 0;
+    }
+
+        .ulearn-site-header .ulearn-menu > summary {
+            display: none;
+        }
+
+        /* Hiển thị menu dù details đang đóng */
+        .ulearn-site-header .ulearn-menu .nav-links {
+            display: flex !important;
+            position: static;
+            visibility: visible;
+            opacity: 1;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            background: transparent;
+        }
+}
+
+/* Mobile: chỉ hiển thị menu khi được mở */
+@media screen and (max-width: 989px) {
+
+    .ulearn-menu:not([open]) .nav-links {
+        display: none;
+    }
+
+    .ulearn-menu[open] .nav-links {
+        display: flex;
+        flex-direction: column;
+    }
+}
+/* ULEARN - Menu responsive ổn định */
+.ulearn-menu {
+    flex: 1;
+    min-width: 0;
+}
+
+.ulearn-menu-toggle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.ulearn-menu-button {
+    display: none;
+    cursor: pointer;
+}
+
+@media (min-width: 990px) {
+    .ulearn-menu .nav-links {
+        display: flex !important;
+        position: static !important;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+    }
+}
+
+@media (max-width: 989px) {
+    .ulearn-nav {
+        position: relative;
+    }
+
+    .ulearn-menu {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .ulearn-menu-button {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 10px 16px;
+        border: 1px solid #d8e5d4;
+        border-radius: 10px;
+        background: #f7fbf0;
+        color: #15593b;
+        font-weight: 700;
+    }
+
+    .ulearn-menu .nav-links {
+        display: none !important;
+        position: absolute;
+        top: 100%;
+        left: 18px;
+        right: 18px;
+        z-index: 100;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 16px;
+        background: white;
+        border: 1px solid #e0ead9;
+        border-radius: 14px;
+        box-shadow: 0 18px 44px #18382320;
+    }
+
+    .ulearn-menu-toggle:checked ~ .nav-links {
+        display: flex !important;
+    }
+
+    .ulearn-menu .nav-links > a {
+        padding: 12px;
+    }
+}
+
+/* ULEARN - Tinh chỉnh banner desktop */
+@media (min-width: 1100px) {
+
+    .ulearn-hero {
+        grid-template-columns: 1.25fr 0.95fr;
+        gap: 24px;
+        padding: 65px 42px;
+    }
+
+        .ulearn-hero h1 {
+            font-size: clamp(42px, 4vw, 56px);
+            line-height: 1.17;
+            letter-spacing: -0.045em;
+        }
+
+    .ulearn-hero-art {
+        min-width: 0;
+    }
+
+    .ulearn-illustration-card {
+        width: 100%;
+        max-width: 470px;
+    }
+}
+
+/* Điện thoại: giữ bố cục một cột */
+@media (max-width: 767px) {
+    .ulearn-hero {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+        .ulearn-hero h1 {
+            font-size: clamp(32px, 8vw, 43px);
+            line-height: 1.2;
+        }
+}
+
+/* =======================================================
+   ULEARN — DESKTOP FULL-WIDTH HERO (CLEAN VERSION)
+   Keeps existing mobile rules and the working header.
+   Requires: .ulearn-hero > .ulearn-hero-inner >
+   .ulearn-hero-content + .ulearn-hero-art
+   ======================================================= */
+@media (min-width: 900px) {
+    /* Only the INNER wrapper splits into columns. */
+    .ulearn-home .ulearn-hero {
+        display: block;
+        padding: 0;
+    }
+
+    .ulearn-home .ulearn-hero-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 38px;
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 65px 46px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .ulearn-home .ulearn-hero-content,
+    .ulearn-home .ulearn-hero-art {
+        min-width: 0;
+    }
+
+    .ulearn-home .ulearn-hero h1 {
+        font-size: clamp(40px, 4vw, 56px);
+        line-height: 1.16;
+        letter-spacing: -0.045em;
+    }
+
+    .ulearn-home .ulearn-hero-art {
+        width: 100%;
+        min-height: 360px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .ulearn-home .ulearn-illustration-card {
+        width: 100%;
+        max-width: 520px;
+    }
+}
+
+/* Full-bleed background ONLY on wide desktop screens. */
+@media (min-width: 1100px) {
+    .ulearn-home .ulearn-hero {
+        width: 100vw;
+        max-width: none;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        border-radius: 0;
+    }
+}
+
+/* =========================================
+   ULEARN - DESKTOP HERO FINAL
+   ========================================= */
+
+@media (min-width: 1100px) {
+
+    /* Banner trải rộng toàn màn hình */
+    .ulearn-hero {
+        display: block;
+        width: 100vw;
+        max-width: none;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        padding: 0;
+        border-radius: 0;
+    }
+
+    /* Hai cột nằm ngang */
+    .ulearn-hero-inner {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) !important;
+        align-items: center;
+        gap: 48px;
+        width: 100%;
+        max-width: 1280px;
+        min-height: 570px;
+        margin: 0 auto;
+        padding: 64px 48px;
+    }
+
+    /* Nội dung bên trái */
+    .ulearn-hero-content {
+        min-width: 0;
+    }
+
+    .ulearn-hero h1 {
+        font-size: clamp(44px, 4.2vw, 60px);
+        line-height: 1.15;
+    }
+
+    /* Minh họa bên phải */
+    .ulearn-hero-art {
+        min-width: 0;
+        width: 100%;
+        min-height: 390px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ulearn-illustration-card {
+        width: 100%;
+        max-width: 520px;
+    }
+}
+/* HEADER ULEARN GỌN HƠN */
+@media (min-width: 990px) {
+    .ulearn-site-header .ulearn-nav {
+        min-height: 68px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+
+    .ulearn-brand-name {
+        font-size: 27px;
+    }
+
+    .ulearn-brand-icon {
+        font-size: 28px;
+    }
+
+    .ulearn-menu .nav-links > a {
+        padding: 8px 12px;
+    }
+
+    .ulearn-site-header .ulearn-login,
+    .ulearn-site-header .ulearn-start {
+        min-height: 40px;
+        padding: 8px 15px;
+    }
+}
+
+/* BỎ KHOẢNG TRỐNG GIỮA HEADER VÀ BANNER */
+main:has(.ulearn-hero) {
+    padding-top: 0 !important;
+}
+
+@media (min-width: 1100px) {
+    .ulearn-hero-inner {
+        min-height: 480px;
+        padding-top: 38px;
+        padding-bottom: 38px;
+    }
+}
+/* MINH HỌA BANNER ULEARN */
+.ulearn-illustration-card {
+    display: grid;
+    grid-template-columns: minmax(115px, 0.8fr) minmax(0, 1.65fr);
+    gap: 16px;
+    padding: 24px;
+    background: #fffdf0;
+    border-radius: 28px;
+    box-shadow: 0 22px 55px rgba(24, 75, 52, 0.16);
+}
+
+.ulearn-illustration-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.ulearn-mini-brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #116f43;
+    margin-bottom: 17px;
+}
+
+.ulearn-illustration-sidebar > span {
+    display: block;
+    padding: 9px 10px;
+    border-radius: 10px;
+    color: #526b57;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+    .ulearn-illustration-sidebar > span.active {
+        background: #e8f4b7;
+        color: #145a39;
+        font-weight: 700;
+    }
+
+.ulearn-illustration-main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 285px;
+    padding: 24px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #fff4c6, #eff9d5);
+    border-radius: 22px;
+}
+
+    .ulearn-illustration-main strong {
+        position: relative;
+        z-index: 2;
+        color: #125a36;
+        font-size: clamp(25px, 2.7vw, 37px);
+        line-height: 1.28;
+        font-weight: 800;
+    }
+
+    .ulearn-illustration-main p {
+        position: relative;
+        z-index: 2;
+        max-width: 180px;
+        margin-top: 18px;
+        color: #527053;
+        font-size: 11px;
+    }
+
+.ulearn-book-art {
+    position: absolute;
+    right: 12px;
+    bottom: 3px;
+    font-size: 62px;
+    line-height: 1;
+}
+
+.ulearn-book-sprout {
+    position: absolute;
+    right: 0;
+    bottom: 53px;
+    font-size: 34px;
+}
+
+@media (max-width: 767px) {
+    .ulearn-illustration-card {
+        grid-template-columns: 90px minmax(0, 1fr);
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .ulearn-illustration-sidebar > span {
+        padding: 7px 4px;
+        font-size: 10px;
+    }
+
+    .ulearn-mini-brand {
+        font-size: 13px;
+    }
+
+    .ulearn-illustration-main {
+        min-height: 235px;
+        padding: 15px;
+    }
+
+        .ulearn-illustration-main strong {
+            font-size: clamp(21px, 5vw, 29px);
+        }
+
+    .ulearn-book-art {
+        font-size: 43px;
+    }
+
+    .ulearn-book-sprout {
+        bottom: 37px;
+        font-size: 25px;
+    }
+}

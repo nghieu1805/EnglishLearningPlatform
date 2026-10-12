@@ -1,7 +1,97 @@
 @model List<Grade>
-@{ViewData["Title"]="Học tiếng Anh theo lớp";}
-<section class="hero"><div><p class="eyebrow">YOUR ENGLISH JOURNEY</p><h1>Mỗi từ mới.<br/>Một bước tiến xa.</h1><p>Khám phá từ vựng theo chủ đề, luyện tập và nhìn thấy tiến bộ của bạn từ lớp 1 đến lớp 12.</p><a class="btn" href="#grades">Chọn lớp để bắt đầu →</a></div><aside class="hero-note"><span>01 / LEARN</span><h2>Learn.<br/>Practise.<br/>Remember.</h2><p>Chọn lớp → Chủ đề → Từ vựng → Quiz</p></aside></section>
-<section id="grades"><div class="section-heading"><div><p class="eyebrow">CHỌN ĐIỂM BẮT ĐẦU</p><h2>Lớp học của bạn</h2></div><p>12 lớp · 3 cấp học</p></div>
-@foreach(var level in new[]{(Title:"Tiểu học",Min:1,Max:5),(Title:"Trung học cơ sở",Min:6,Max:9),(Title:"Trung học phổ thông",Min:10,Max:12)}){
-<h3 class="level-title">@level.Title</h3><div class="grade-grid">@foreach(var grade in Model.Where(g=>g.Number>=level.Min&&g.Number<=level.Max)){<a class="grade-card" asp-controller="Learn" asp-action="Grade" asp-route-id="@grade.Id"><small>GRADE @grade.Number.ToString("00")</small><strong>@grade.Name</strong><span>Khám phá chủ đề ↗</span></a>}</div>}
-</section><p class="notice">Bản khởi đầu: 12 lớp đã sẵn sàng. Lớp 6 có nội dung DEMO để thử chức năng; nội dung SGK chính thức cần được bổ sung và đối chiếu nguồn.</p>
+@{
+    ViewData["Title"] = "Học tiếng Anh theo lớp";
+    var levels = new[]
+    {
+        (Id: "primary", Title: "Tiểu học", Range: "Lớp 1 – Lớp 5", Min: 1, Max: 5, Icon: "🎒"),
+        (Id: "secondary", Title: "Trung học cơ sở", Range: "Lớp 6 – Lớp 9", Min: 6, Max: 9, Icon: "📚"),
+        (Id: "highschool", Title: "Trung học phổ thông", Range: "Lớp 10 – Lớp 12", Min: 10, Max: 12, Icon: "🎓")
+    };
+
+}
+<section class="ulearn-hero">
+    <div class="ulearn-hero-inner">
+        <div class="ulearn-hero-content">
+            <p class="eyebrow">YOUR ENGLISH JOURNEY</p>
+
+            <h1>
+                Mỗi từ mới<br />
+                Mở ra một cơ hội lớn
+            </h1>
+
+            <p class="ulearn-hero-text">
+                Khám phá từ vựng theo chủ đề, luyện tập và nhìn thấy sự tiến bộ
+                của bạn từ lớp 1 đến lớp 12.
+            </p>
+
+            <a class="btn ulearn-hero-btn" href="#grades">
+                Chọn lớp để bắt đầu →
+            </a>
+        </div>
+        <div class="ulearn-hero-art">
+            <div class="ulearn-illustration-card">
+
+                <div class="ulearn-illustration-sidebar">
+                    <div class="ulearn-mini-brand">
+                        🌱 ULEARN
+                    </div>
+
+                    <span class="active">⌂ Trang chủ</span>
+                    <span>▣ Bài học</span>
+                    <span>▤ Từ vựng</span>
+                    <span>✎ Luyện tập</span>
+                    <span>★ Quiz</span>
+                </div>
+
+                <div class="ulearn-illustration-main">
+                    <strong>
+                        Learn.<br />
+                        Practice.<br />
+                        Remember.
+                    </strong>
+
+                    <p>Học vững từ vựng, tiến bộ mỗi ngày.</p>
+
+                    <div class="ulearn-book-art" aria-hidden="true">
+                        <span>📖</span>
+                        <span class="ulearn-book-sprout">🌱</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+       
+        
+    </div>
+</section>
+
+    <section class="ulearn-grades" id="grades" aria-labelledby="grades-title">
+        <div class="ulearn-section-title"><div><p class="ulearn-eyebrow">CHỌN ĐIỂM BẮT ĐẦU</p><h2 id="grades-title">Lớp học của bạn</h2></div><span>12 lớp · 3 cấp học</span></div>
+        <div class="ulearn-level-grid">
+            @foreach (var level in levels)
+            {
+                <a class="ulearn-level-card" href="#@level.Id">
+                    <span class="ulearn-level-icon" aria-hidden="true">@level.Icon</span>
+                    <span class="ulearn-level-copy"><strong>@level.Title</strong><small>@level.Range</small></span>
+                    <span class="ulearn-level-arrow" aria-hidden="true">→</span>
+                </a>
+            }
+        </div>
+        @foreach (var level in levels)
+        {
+            <section class="ulearn-grade-section" id="@level.Id" aria-labelledby="heading-@level.Id">
+                <h3 id="heading-@level.Id">@level.Title</h3>
+                <div class="ulearn-class-grid">
+                    @foreach (var grade in Model.Where(g => g.Number >= level.Min && g.Number <= level.Max))
+                    {
+                        <a class="ulearn-class-card" asp-controller="Learn" asp-action="Grade" asp-route-id="@grade.Id">
+                            <small>GRADE @grade.Number.ToString("00")</small>
+                            <strong>@grade.Name</strong>
+                            <span>Khám phá chủ đề <span aria-hidden="true">↗</span></span>
+                        </a>
+                    }
+                </div>
+            </section>
+        }
+    </section>
+    <p class="ulearn-content-note">Nội dung theo lớp đang được cập nhật và đối chiếu nguồn học liệu. Một số nội dung hiện có chỉ phục vụ minh họa hoặc kiểm thử.</p>
